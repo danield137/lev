@@ -1,0 +1,271 @@
+{
+  "type": "mcp_eval",
+  "description": "MCP evaluation scenarios for Kusto/Microsoft Fabric RTI queries",
+  "logging": {
+    "mcp_calls": true
+  },
+  "llm_config": {
+    "active_profile": "azure_openai",
+    "overrides": {
+      "solver": {
+        "persona": "concise_solver"
+      },
+      "solver.reasoning": {
+        "model_variant": "reasoning"
+      },
+      "asker": {
+        "model_variant": "fast",
+        "persona": "diligent_asker"
+      }
+    }
+  },
+  "mcp_servers": {
+    "microsoft-fabric-rti-mcp": {
+      "command": "uvx",
+      "args": [
+        "--no-cache",
+        "c:/users/ddubovski/Source/repos/fabric-rti-mcp"
+      ],
+      "env": {
+        "KUSTO_DEFAULT_SERVICE_URI": "https://help.kusto.windows.net",
+        "KUSTO_DEFAULT_DATABASE": "Samples"
+      }
+    }
+  },
+  "data": [
+    {
+      "id": "count_rows",
+      "question": "How many rows are in my weather events table in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "StormEvents | count"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "Count": "int"
+                }
+              ],
+              "values": [
+                [
+                  59066
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 59066}]
+    },
+    {
+      "id": "trips_per_vendor",
+      "question": "What is the number of trips per vendor, for the year 2011 in the NYC Taxi dataset (Trips table) in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "Trips | extend Year = datetime_part('pickup_datetime', StartTime) | where Year == 2011 | summarize count() by vendor_id"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "vendor_id": "string",
+                  "count_": "real"
+                }
+              ],
+              "values": [
+                [
+                  "CMT",
+                  90133189
+                ],
+                [
+                  "VTS",
+                  86764019
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": ["critique"]
+    },
+    {
+      "id": "trips_avg_cmt",
+      "question": "What is the average number of trips for the vendor 'CMT', for the years 2011 to 2015 in the NYC Taxi dataset (Trips table) in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "Trips | extend Year=datetime_part('year',pickup_datetime)  | where Year between (2011 .. 2015) | where vendor_id == 'CMT' | summarize count() by Year | summarize avg(count_)"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "avg_count_": "real"
+                }
+              ],
+              "values": [
+                [
+                  87036478.25
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 87036478.25}]
+    },
+    {
+      "id": "storm_most_damaging_event_2007",
+      "question": "What state suffered the most people effected directly (dead or injured) from a single damaging storm event in the StormEvents table in Samples database, in the Samples database (https://help.kusto.windows.net/)? How many people were effected directly?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "StormEvents | where DamageProperty > 1 | extend Year=datetime_part( 'year', StartTime) | where Year == 2007 | summarize sum(DeathsDirect) + sum(InjuriesDirect) by State | top 1 by Column1 desc"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "State": "string",
+                  "Column1": "real"
+                }
+              ],
+              "values": [
+                [
+                  "TEXAS",
+                  269
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 521}]
+    },
+    {
+      "id": "storm_most_damaging_event_2007_vague",
+      "question": "What state suffered had the most people effected directly from a single damaging storm event in the StormEvents table in Samples database, in the Samples database (https://help.kusto.windows.net/)? How many people were effected directly?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "StormEvents | summarize sum(DeathsDirect) + sum(InjuriesDirect) by State, EventId | top 1 by Column1 desc"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "State": "string",
+                  "Column1": "real"
+                }
+              ],
+              "values": [
+                [
+                  "MISSOURI",
+                  521
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 521}]
+    },
+    {
+      "id": "storms_cali",
+      "question": "What was the most common weather event in California, based on the StormEvents table in Samples database, in the Samples database (https://help.kusto.windows.net/)? How many people were effected directly?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "StormEvents | where State =~ 'california' | summarize count() by EventType | top 1 by EventType desc"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "State": "string",
+                  "Column1": "real"
+                }
+              ],
+              "values": [
+                [
+                  "Heavy Snow",
+                  186
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 186}]
+    }
+  ]
+}

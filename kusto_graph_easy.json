@@ -1,0 +1,73 @@
+{
+  "type": "mcp_eval",
+  "description": "MCP evaluation scenarios for Kusto/Microsoft Fabric RTI queries",
+  "logging": {
+    "mcp_calls": true
+  },
+  "llm_config": {
+    "active_profile": "azure_openai",
+    "overrides": {
+      "solver": {
+        "persona": "concise_solver"
+      },
+      "solver.reasoning": {
+        "model_variant": "reasoning"
+      },
+      "asker": {
+        "model_variant": "fast",
+        "persona": "diligent_asker"
+      }
+    }
+  },
+  "mcp_servers": {
+    "microsoft-fabric-rti-mcp": {
+      "command": "uvx",
+      "args": [
+        "--no-cache",
+        "c:/users/ddubovski/Source/repos/fabric-rti-mcp"
+      ],
+      "env": {
+        "KUSTO_DEFAULT_SERVICE_URI": "https://help.kusto.windows.net",
+        "KUSTO_DEFAULT_DATABASE": "Samples"
+      }
+    }
+  },
+  "data": [
+    {
+      "id": "snb_most_known_people",
+      "question": "In the Samples database https://help.kusto.windows.net/, who is the most well-known person in the LDBC_SNB_Interactive graph by KNOWS in-degree? Use graph operators (e.g. graph-match)!",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": []
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "n_id": "long",
+                  "count_": "int"
+                }
+              ],
+              "values": [
+                [
+                  32985348834375,
+                  331
+                ]
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "type": "mcp_eval",
+  "description": "Complete evaluation with all configuration",
+
+  "config": {
+    "logging": {
+      "mcp_calls": true,
+      "mcp_log_file": "mcp_calls.csv"
+    }
+  },
+  
+  "llm": {
+    "active_profile": "openai"
+  },
+  
+  "mcp": {
+    "servers": {
+      "microsoft-fabric-rti-mcp": {
+        "command": "uvx",
+        "args": ["--no-cache", "/Users/danieldror/Source/repos/fabric-rti-mcp"],
+        "env": {
+          "KUSTO_DEFAULT_SERVICE_URI": "https://help.kusto.windows.net",
+          "KUSTO_DEFAULT_DATABASE": "Samples"
+        }
+      }
+    }
+  },
+  
+  "data": [
+    {
+      "id": "count_rows",
+      "tags": ["kusto:basic", "difficulty:easy", "category:aggregation"],
+      "question": "How many rows are in StormEvents in Samples?",
+      
+      "execution": {
+        "allowed_mcps": ["microsoft-fabric-rti-mcp"],
+        "solver": {
+          "max_reasoning_steps": 4,
+          "max_retrospective_turns": 1
+        },
+        "asker": {
+          "max_turns": 1
+        }
+      },
+      
+      "evaluators": [
+        {
+          "type": "function",
+          "name": "extract_number",
+          "args": {
+            "from": "{answer}",
+            "expected": 59066
+          },
+          "weight": 0.4,
+          "tags": ["correctness"]
+        },
+        {
+          "type": "function",
+          "name": "tool_output_contains",
+          "args": {
+            "tool_calls": "{tool_calls}",
+            "tool_name": "kusto_query",
+            "path": "output.count",
+            "expected": 59066
+          },
+          "weight": 0.2,
+          "tags": ["grounding"]
+        },
+        {
+          "type": "function",
+          "name": "process_efficiency",
+          "args": {
+            "reasoning_steps": "{reasoning_steps}",
+            "max_expected": 4
+          },
+          "weight": 0.1,
+          "tags": ["efficiency"]
+        },
+        {
+          "type": "llm",
+          "name": "quality_check",
+          "args": {
+            "prompt": "Score accuracy, completeness, and relevance. Give overall score 0-1.",
+            "context": {
+              "question": "{question}",
+              "answer": "{answer}",
+              "tool_calls": "{tool_calls}"
+            }
+          },
+          "weight": 0.3,
+          "tags": ["quality"],
+          "llm_profile": "openai"
+        }
+      ]
+    },
+    
+    {
+      "id": "graph_analysis",
+      "tags": ["kusto:graph", "difficulty:hard", "category:analysis"],
+      "question": "What are the most connected nodes in LDBC_SNB graph?",
+      
+      "execution": {
+        "allowed_mcps": ["microsoft-fabric-rti-mcp"],
+        "solver": {
+          "max_reasoning_steps": 10,
+          "max_retrospective_turns": 3,
+          "allow_multiple_tool_calls": true,
+          "llm_profile": "openai"
+        },
+        "asker": {
+          "max_turns": 3,
+          "prompt_style": "clarifying",
+          "llm_profile": "openai-fast"
+        },
+        "timeout_seconds": 60
+      },
+      
+      "evaluators": [
+        {
+          "type": "function",
+          "name": "contains_any",
+          "args": {
+            "text": "{answer}",
+            "values": ["32985348834375", "degree", "centrality"]
+          },
+          "weight": 0.3,
+          "tags": ["correctness"]
+        },
+        {
+          "type": "function",
+          "name": "tool_call_range",
+          "args": {
+            "tool_calls": "{tool_calls}",
+            "tool_name": "kusto_query",
+            "min": 2,
+            "max": 5
+          },
+          "weight": 0.2,
+          "tags": ["process"]
+        },
+        {
+          "type": "llm",
+          "name": "methodology_check",
+          "args": {
+            "prompt": "Evaluate the systematic approach to graph analysis. Score 0-1.",
+            "context": {
+              "answer": "{answer}",
+              "reasoning_steps": "{reasoning_steps}"
+            }
+          },
+          "weight": 0.5,
+          "tags": ["methodology", "quality"],
+          "llm_profile": "anthropic"
+        }
+      ]
+    },
+    
+    {
+      "id": "schema_lookup",
+      "tags": ["kusto:metadata", "difficulty:easy", "category:lookup"],
+      "question": "What's the schema for ConferenceSessions?",
+      
+      "execution": {
+        "allowed_mcps": ["microsoft-fabric-rti-mcp"],
+        "solver": {
+          "max_reasoning_steps": 2,
+          "max_retrospective_turns": 0
+        },
+        "asker": {
+          "max_turns": 0
+        }
+      },
+      
+      "evaluators": [
+        {
+          "type": "function",
+          "name": "contains_all",
+          "args": {
+            "text": "{answer}",
+            "values": ["SessionId", "Title", "Conference"]
+          },
+          "weight": 0.7,
+          "tags": ["correctness"]
+        },
+        {
+          "type": "function",
+          "name": "response_time",
+          "args": {
+            "elapsed_ms": "{elapsed_ms}",
+            "max_ms": 5000
+          },
+          "weight": 0.3,
+          "tags": ["efficiency"]
+        }
+      ]
+    }
+  ]
+}

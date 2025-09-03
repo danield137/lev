@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lev"
+version = "0.1.0"
+description = "An evaluation framework for LLMs using MCPs"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "FlowWith", email = "hello@flowwith.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "fastmcp>=0.3.0",
+    "mcp>=1.13.0",
+    "openai>=1.98.0",
+    "termcolor>=2.0.0",
+    "anthropic>=0.64.0",
+    "semantic-kernel>=1.35.0",
+    "python-dotenv>=1.0.0",
+    "termcolor>=2.0.0",
+]
+
+[project.optional-dependencies]
+azure = [
+    "azure-identity>=1.15.0",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.1.0",
+    "black>=23.0",
+    "isort>=5.0",
+]
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "T20"]
+
+[tool.isort]
+line_length = 120
+profile = "black"
+
+[tool.setuptools.packages.find]
+include = ["lev*"]
+
+[tool.setuptools]
+py-modules = ["eval", "context"]
+
+[project.scripts]
+eval = "eval:main"

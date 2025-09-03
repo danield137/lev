@@ -1,0 +1,478 @@
+{
+  "type": "mcp_eval",
+  "description": "MCP evaluation scenarios for Kusto/Microsoft Fabric RTI queries",
+  "logging": {
+    "mcp_calls": true
+  },
+  "llm_config": {
+    "active_profile": "openai",
+    
+    "overrides": {
+      "solver": {
+        "persona": "concise_solver"
+      },
+      "solver.reasoning": {
+        "model_variant": "reasoning"
+      },
+      "asker": {
+        "model_variant": "fast",
+        "persona": "diligent_asker"
+      }
+    }
+  },
+  "mcp_servers": {
+    "microsoft-fabric-rti-mcp": {
+      "command": "uvx",
+      "args": [
+        "--no-cache",
+        "/Users/danieldror/Source/repos/fabric-rti-mcp"
+      ],
+      "env": {
+        "KUSTO_DEFAULT_SERVICE_URI": "https://help.kusto.windows.net",
+        "KUSTO_DEFAULT_DATABASE": "Samples"
+      }
+    }
+  },
+  "data": [
+    {
+      "id": "count_rows",
+      "tags": [
+        "kusto=relational",
+        "reasoning=0",
+        "query_complexity=0"
+      ],
+      "question": "How many rows are in my weather events table in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "StormEvents | count"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "Count": "int"
+                }
+              ],
+              "values": [
+                [
+                  59066
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 59066}]
+    },
+    {
+      "id": "count_tables",
+      "tags": [
+        "kusto=relational",
+        "reasoning=0",
+        "query_complexity=0"
+      ],
+      "question": "In the Samples database (https://help.kusto.windows.net/), how many tables are there?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              ".show tables | count"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "Count": "int"
+                }
+              ],
+              "values": [
+                [
+                  111
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "busiest_conference_day",
+      "tags": [
+        "kusto=relational",
+        "reasoning=1",
+        "query_complexity=1"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, which day had the most sessions and for which conference was it?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "ConferenceSessions | summarize count() by Day, Conference | top 1 by count_ desc"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "Day": "datetime",
+                  "Conference": "string",
+                  "count_": "int"
+                }
+              ],
+              "values": [
+                [
+                  "5/26/2021",
+                  "Build 2021",
+                  12
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "worst_covid_day",
+      "tags": [
+        "kusto=relational",
+        "reasoning=1",
+        "query_complexity=0"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, what was the worst day for COVID-19 in the DailyCovid19 table?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "DailyCovid19 | summarize arg_max(max_Deaths, Timestamp)"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "Date": "datetime",
+                  "max_deaths": "int"
+                }
+              ],
+              "values": [
+                [
+                  "11/18/2020",
+                  1345639
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "taxis_winter_vs_summer_2009_2018",
+      "tags": [
+        "kusto=relational",
+        "reasoning=1",
+        "query_complexity=2"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, between 2009 and 2018 did people take more taxi rides in winter or in summer?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": []
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "Column1": "string"
+                },
+                {
+                  "avg_MoreRidesInWinter": "real"
+                },
+                {
+                  "MeanDiff": "real"
+                }
+              ],
+              "values": [
+                [
+                  "Yes",
+                  0.7,
+                  201773.3
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "snb_relation_types",
+      "tags": [
+        "kusto=graph",
+        "reasoning=1",
+        "query_complexity=2"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, what types of relations exist in the LDBC_SNB_Interactive graph and how many of each type?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": []
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "Label": "string",
+                  "count_": "int"
+                }
+              ],
+              "values": [
+                [
+                  "HAS_TAG",
+                  580236
+                ],
+                [
+                  "HAS_CREATOR",
+                  573488
+                ],
+                [
+                  "REPLY_OF",
+                  302086
+                ],
+                [
+                  "CONTAINER_OF",
+                  271402
+                ],
+                [
+                  "HAS_MEMBER",
+                  246536
+                ],
+                [
+                  "LIKES",
+                  218880
+                ],
+                [
+                  "HAS_INTEREST",
+                  70950
+                ],
+                [
+                  "HAS_TYPE",
+                  32160
+                ],
+                [
+                  "KNOWS",
+                  28146
+                ],
+                [
+                  "HAS_MODERATOR",
+                  27500
+                ],
+                [
+                  "WORK_AT",
+                  6626
+                ],
+                [
+                  "IS_PART_OF",
+                  2908
+                ],
+                [
+                  "STUDY_AT",
+                  2418
+                ],
+                [
+                  "IS_SUBCLASS_OF",
+                  140
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "snb_most_known_people",
+      "tags": [
+        "kusto=graph",
+        "reasoning=1",
+        "query_complexity=2"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, who is the most well-known person in the LDBC_SNB_Interactive graph by KNOWS in-degree?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": []
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "n_id": "long",
+                  "count_": "int"
+                }
+              ],
+              "values": [
+                [
+                  32985348834375,
+                  331
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "snb_best_connection_to_target",
+      "tags": [
+        "kusto=graph",
+        "reasoning=2",
+        "query_complexity=2"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, given I know person 17592186045684, what is my best way to get close to person 32985348834375?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": []
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {}
+          }
+        }
+      }
+    },
+    {
+      "id": "snb_cohabitants_of_top_post_poster",
+      "tags": [
+        "kusto=graph",
+        "reasoning=3",
+        "query_complexity=2"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, for the person who authored the post with the most likes, how many people live in the same place as they do in based on social network data?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              ""
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {}
+          }
+        }
+      }
+    },
+    {
+      "id": "snb_top_post_poster_vs_top_overall_likes",
+      "tags": [
+        "kusto=graph",
+        "reasoning=2",
+        "query_complexity=2"
+      ],
+      "question": "In the Samples database https://help.kusto.windows.net/, is the poster of the most-liked post also the person with the highest overall likes across all posts based on social network data?",
+      "asker_turns": 1,
+      "allowed_mcps": [
+        "microsoft-fabric-rti-mcp"
+      ],
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              ""
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {}
+          }
+        }
+      }
+    }
+  ]
+}

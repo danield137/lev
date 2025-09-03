@@ -1,0 +1,42 @@
+{
+  "profiles": {
+    "openai": {
+      "provider": "openai",
+      "api_key_env": "OPENAI_API_KEY",
+      "models": {
+        "default": "gpt-5-mini",
+        "reasoning": "gpt-5-mini",
+        "fast": "gpt-5-mini"
+      }
+    },
+    "azure_openai": {
+      "provider": "azure_openai",
+      "api_key_env": "AZURE_OPENAI_API_KEY",
+      "endpoint_env": "AZURE_OPENAI_ENDPOINT",
+      "api_version": "2024-08-01-preview",
+      "models": {
+        "default": "gpt-5-mini",
+        "reasoning": "gpt-5-mini",
+        "fast": "gpt-5-mini"
+      }
+    },
+    "lmstudio": {
+      "provider": "lmstudio",
+      "base_url": "http://localhost:1234/v1/",
+      "models": {
+        "default": "gpt-oss",
+        "reasoning": "gpt-oss",
+        "fast": "gpt-oss"
+      }
+    },
+    "anthropic": {
+      "provider": "anthropic",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "models": {
+        "default": "claude-3-5-sonnet-20241022",
+        "reasoning": "claude-3-5-sonnet-20241022",
+        "fast": "claude-3-5-haiku-20241022"
+      }
+    }
+  }
+}

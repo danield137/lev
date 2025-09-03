@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug eval_fabric_rti_mcp.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "eval_fabric_rti_mcp.py",
+            "console": "integratedTerminal",
+            //"args": "${command:pickArgs}"
+        },
+        {
+            "name": "Debug eval_fs_mcp.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "eval.py",
+            "args": ["fs_mcp.json"],
+            "console": "integratedTerminal",
+            //"args": "${command:pickArgs}"
+        }
+    ]
+}

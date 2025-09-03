@@ -1,0 +1,98 @@
+{
+  "type": "mcp_eval",
+  "description": "MCP evaluation scenarios for filesystem operations",
+    "logging": {
+    "mcp_calls": true
+  },
+  "llm_config": {
+    "active_profile": "lmstudio",
+    "defaults": {
+      "model_parameters": {
+        "temperature": 0.1
+      }
+    },
+    
+    "overrides": {
+      "solver": {
+        "persona": "concise_solver"
+      },
+      "solver.reasoning": {
+        "model_variant": "reasoning",
+        "model_parameters": {
+          "temperature": 0.0
+        }
+      },
+      "asker": {
+        "model_variant": "fast",
+        "persona": "diligent_asker"
+      }
+    }
+  },
+  "mcp_servers": {
+    "filesystem-mcp": {
+      "command": "python",
+      "args": ["lev/samples/fs_mcp.py"],
+      "suppress_output": false
+    }
+  },
+  "data": [
+    {
+      "id": "count_letter_a",
+      "question": "How many times does the *lowercase* letter 'a' appear in the file 'lev/samples/a.txt'?",
+      "asker_turns": 1,
+      "solver": {
+        "reasoning": {
+          "max_iterations": 3,
+          "max_"
+        }
+      },
+      "allowed_mcps": ["filesystem-mcp"],
+      "expectations": {
+        "tool_calls": ["read_file"],
+        "tool_inputs": {
+          "read_file": {
+            "acceptable_paths": ["lev/samples/fs_mcp.py"]
+          }
+        },
+        "results": {
+          "read_file": {
+            "file_content": {
+              "contains": "lowercase letter 'a'",
+              "expected_count": 2
+            }
+          }
+        }
+      },
+      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 2}]
+    },
+    {
+      "id": "summarize_python_files",
+      "question": "Read some files in the fw_directory (mainly runner and conversation), what is this folder about?",
+      "asker_turns": 1,
+      "allowed_mcps": ["filesystem-mcp"],
+      "expectations": {
+        "tool_calls": ["list_tree", "read_file"],
+        "tool_inputs": {
+          "list_tree": {
+            "acceptable_paths": ["lev", "lev/"]
+          },
+          "read_file": {
+            "acceptable_paths": ["lev/*.py"]
+          }
+        },
+        "results": {
+          "list_tree": {
+            "directory_structure": {
+              "contains": ["*.py files"]
+            }
+          },
+          "read_file": {
+            "file_content": {
+              "contains": "python modules and functions"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
