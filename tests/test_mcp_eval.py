@@ -24,7 +24,7 @@ class TestMcpDatasetLoader:
                     "question": "Test question?",
                     "asker": "default",
                     "solver": "default",
-                    "allowed_mcps": ["filesystem-mcp"],
+                    "mcps": ["filesystem-mcp"],
                     "expected_tool_calls": ["read_file"],
                 }
             ],
@@ -38,7 +38,7 @@ class TestMcpDatasetLoader:
             scenarios, mcp_servers, _ = load_mcp_dataset(temp_path)
             assert len(scenarios) == 1
             assert scenarios[0]["id"] == "test_scenario"
-            assert scenarios[0]["allowed_mcps"] == ["filesystem-mcp"]
+            assert scenarios[0]["mcps"] == ["filesystem-mcp"]
             # Check that mcp_servers config was injected
             assert "mcp_servers" in scenarios[0]
             assert "filesystem-mcp" in scenarios[0]["mcp_servers"]
@@ -75,7 +75,7 @@ class TestMcpDatasetLoader:
                 {
                     "id": "test_scenario",
                     "question": "Test question?",
-                    # Missing allowed_mcps field
+                    # Missing mcps field
                 }
             ],
         }
@@ -90,13 +90,13 @@ class TestMcpDatasetLoader:
         finally:
             os.unlink(temp_path)
 
-    def test_load_mcp_dataset_invalid_allowed_mcps_type(self):
-        """Test loading dataset with invalid allowed_mcps type."""
+    def test_load_mcp_dataset_invalid_mcps_type(self):
+        """Test loading dataset with invalid mcps type."""
         test_data = {
             "type": "mcp_eval",
             "description": "Test dataset",
             "data": [
-                {"id": "test_scenario", "question": "Test question?", "allowed_mcps": "not-a-list"}  # Should be a list
+                {"id": "test_scenario", "question": "Test question?", "mcps": "not-a-list"}  # Should be a list
             ],
         }
 
@@ -120,7 +120,7 @@ class TestMcpDatasetLoader:
                 {
                     "id": "test_scenario",
                     "question": "Test question?",
-                    "allowed_mcps": ["filesystem-mcp", "undefined-mcp"],  # undefined-mcp not in mcp_servers
+                    "mcps": ["filesystem-mcp", "undefined-mcp"],  # undefined-mcp not in mcp_servers
                 }
             ],
         }
@@ -145,7 +145,7 @@ class TestMcpDatasetLoader:
                 {
                     "id": "test_scenario",
                     "question": "Test question?",
-                    "allowed_mcps": ["filesystem-mcp"],
+                    "mcps": ["filesystem-mcp"],
                 }
             ],
         }
@@ -158,7 +158,7 @@ class TestMcpDatasetLoader:
             scenarios, mcp_servers, _ = load_mcp_dataset(temp_path)
             assert len(scenarios) == 1
             assert scenarios[0]["id"] == "test_scenario"
-            assert scenarios[0]["allowed_mcps"] == ["filesystem-mcp"]
+            assert scenarios[0]["mcps"] == ["filesystem-mcp"]
             # Should have empty mcp_servers config injected
             assert "mcp_servers" in scenarios[0]
             assert scenarios[0]["mcp_servers"] == {}
@@ -172,35 +172,35 @@ class TestMcpValidation:
 
     def test_validate_mcp_usage_valid(self):
         """Test valid MCP usage."""
-        scenario = {"allowed_mcps": ["filesystem-mcp", "weather-mcp"]}
+        scenario = {"mcps": ["filesystem-mcp", "weather-mcp"]}
         used_mcps = ["filesystem-mcp"]
 
         assert validate_mcp_usage(scenario, used_mcps) is True
 
     def test_validate_mcp_usage_invalid(self):
         """Test invalid MCP usage."""
-        scenario = {"allowed_mcps": ["filesystem-mcp"]}
+        scenario = {"mcps": ["filesystem-mcp"]}
         used_mcps = ["filesystem-mcp", "unauthorized-mcp"]
 
         assert validate_mcp_usage(scenario, used_mcps) is False
 
     def test_validate_mcp_usage_empty_allowed(self):
         """Test validation with empty allowed MCPs."""
-        scenario = {"allowed_mcps": []}
+        scenario = {"mcps": []}
         used_mcps = ["any-mcp"]
 
         assert validate_mcp_usage(scenario, used_mcps) is False
 
     def test_validate_mcp_usage_no_usage(self):
         """Test validation with no MCPs used."""
-        scenario = {"allowed_mcps": ["filesystem-mcp"]}
+        scenario = {"mcps": ["filesystem-mcp"]}
         used_mcps = []
 
         assert validate_mcp_usage(scenario, used_mcps) is True
 
-    def test_validate_mcp_usage_missing_allowed_mcps(self):
-        """Test validation with missing allowed_mcps field."""
-        scenario = {}  # No allowed_mcps field
+    def test_validate_mcp_usage_missing_mcps(self):
+        """Test validation with missing mcps field."""
+        scenario = {}  # No mcps field
         used_mcps = ["some-mcp"]
 
         assert validate_mcp_usage(scenario, used_mcps) is False
@@ -312,11 +312,11 @@ def test_dataset_schema_compliance():
         assert len(scenarios) > 0
 
         # Check each scenario has required fields
-        required_fields = {"id", "question", "allowed_mcps"}
+        required_fields = {"id", "question", "mcps"}
         for scenario in scenarios:
             assert all(field in scenario for field in required_fields)
-            assert isinstance(scenario["allowed_mcps"], list)
-            assert len(scenario["allowed_mcps"]) > 0
+            assert isinstance(scenario["mcps"], list)
+            assert len(scenario["mcps"]) > 0
 
         # Check specific scenarios exist
         scenario_ids = [s["id"] for s in scenarios]

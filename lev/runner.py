@@ -70,7 +70,7 @@ async def run_evals(
     for i, suite in enumerate(suites, 1):
         suite_id = suite["id"]
         question = suite["question"]
-        allowed_mcps = suite["allowed_mcps"]
+        suite_mcps = suite["mcps"]
         tool_calls_sequence = []
 
         # Create display name with tags
@@ -91,8 +91,7 @@ async def run_evals(
                         score=0.0,
                         reasoning=conversation_result.error or "Unknown error",
                         conversation=ChatHistory(),
-                        allowed_mcps=allowed_mcps,
-                        used_mcps=[],
+                        mcps=[],
                         mcp_valid=False,
                         tool_calls_sequence=[],
                     )
@@ -101,7 +100,7 @@ async def run_evals(
                 continue
 
             conversation = conversation_result.conversation
-            used_mcps = conversation_result.used_mcps
+            mcps = conversation_result.mcps
             solver_agent = conversation_result.solver_agent
             if solver_agent is None:
                 raise ValueError("No solver agent found.")
@@ -113,7 +112,7 @@ async def run_evals(
                             {
                                 "type": "call",
                                 "name": tc["function"]["name"],
-                                "server": used_mcps[0] if used_mcps else "unknown",
+                                "server": mcps[0] if mcps else "unknown",
                                 "arguments": tc["function"]["arguments"],
                             }
                         )
@@ -121,7 +120,7 @@ async def run_evals(
                     tool_calls_sequence.append({"type": "response", "content": msg.get("content", "")})
 
             # Validate MCP usage
-            mcp_valid = validate_mcp_usage(suite, used_mcps)
+            mcp_valid = validate_mcp_usage(suite, mcps)
 
             # Judge the conversation using scoring configuration
             if len(conversation) >= 2:
@@ -235,8 +234,7 @@ async def run_evals(
                     score=score,
                     reasoning=reasoning,
                     conversation=conversation,
-                    allowed_mcps=allowed_mcps,
-                    used_mcps=used_mcps,
+                    mcps=mcps,
                     mcp_valid=mcp_valid,
                     tool_calls_sequence=tool_calls_sequence,
                     conversation_trace=conversation_trace,
@@ -254,8 +252,7 @@ async def run_evals(
                     score=0.0,
                     reasoning=str(e),
                     conversation=ChatHistory(),
-                    allowed_mcps=allowed_mcps,
-                    used_mcps=[],
+                    mcps=[],
                     mcp_valid=False,
                     tool_calls_sequence=[],
                     conversation_trace="",

@@ -43,7 +43,7 @@
       ],
       "question": "How many rows are in my weather events table in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -85,7 +85,7 @@
       ],
       "question": "In the Samples database (https://help.kusto.windows.net/), how many tables are there?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -126,7 +126,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, which day had the most sessions and for which conference was it?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -171,7 +171,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, what was the worst day for COVID-19 in the DailyCovid19 table?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -214,7 +214,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, between 2009 and 2018 did people take more taxi rides in winter or in summer?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -261,7 +261,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, what types of relations exist in the LDBC_SNB_Interactive graph and how many of each type?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -354,7 +354,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, who is the most well-known person in the LDBC_SNB_Interactive graph by KNOWS in-degree?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -395,7 +395,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, given I know person 17592186045684, what is my best way to get close to person 32985348834375?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -423,7 +423,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, for the person who authored the post with the most likes, how many people live in the same place as they do in based on social network data?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {
@@ -453,7 +453,7 @@
       ],
       "question": "In the Samples database https://help.kusto.windows.net/, is the poster of the most-liked post also the person with the highest overall likes across all posts based on social network data?",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {

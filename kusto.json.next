@@ -34,7 +34,7 @@
       "question": "How many rows are in StormEvents in Samples?",
       
       "execution": {
-        "allowed_mcps": ["microsoft-fabric-rti-mcp"],
+        "mcps": ["microsoft-fabric-rti-mcp"],
         "solver": {
           "max_reasoning_steps": 4,
           "max_retrospective_turns": 1
@@ -101,7 +101,7 @@
       "question": "What are the most connected nodes in LDBC_SNB graph?",
       
       "execution": {
-        "allowed_mcps": ["microsoft-fabric-rti-mcp"],
+        "mcps": ["microsoft-fabric-rti-mcp"],
         "solver": {
           "max_reasoning_steps": 10,
           "max_retrospective_turns": 3,
@@ -162,7 +162,7 @@
       "question": "What's the schema for ConferenceSessions?",
       
       "execution": {
-        "allowed_mcps": ["microsoft-fabric-rti-mcp"],
+        "mcps": ["microsoft-fabric-rti-mcp"],
         "solver": {
           "max_reasoning_steps": 2,
           "max_retrospective_turns": 0

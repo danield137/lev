@@ -10,9 +10,9 @@ from lev.prompts.reasoning import REASONING_AGENT_DEFAULT_SYSTEM_PROMPT
 
 def create_mcp_clients(eval_config: Dict[str, Any], mcp_registry: McpClientRegistry):
     """Create MCP clients for allowed servers using the registry."""
-    allowed_mcps = eval_config.get("allowed_mcps", [])
+    mcps = eval_config.get("mcps", [])
     mcp_clients = []
-    for server_name in allowed_mcps:
+    for server_name in mcps:
         mcp_client = mcp_registry.get_client(server_name)
         if mcp_client:
             mcp_clients.append(mcp_client)

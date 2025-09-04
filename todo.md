@@ -8,7 +8,7 @@
 8. bug when multiple tool calls are made, the output repeats
 9. handle mcp instructions (should be sent along with available tools)
 graph issues:
-1. No clear way to get schema / topology
+1. No clear way to describe a graph (get schema / topology) or sample it
 2. By default, won't resort to graph semantics (graph-match)
 3. Even if forced to (say, by having a `kusto_graph_query` tool specifically), often produces wrong queries.
 4. 

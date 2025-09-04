@@ -19,7 +19,7 @@ async def converse(
     initial_question = eval_config["question"]
     conversation.add_user_message(initial_question)
 
-    used_mcps = []
+    mcps = []
 
     try:
         # Initialize solver agent (connects to MCP)
@@ -36,8 +36,8 @@ async def converse(
 
             # Track MCP usage from connected clients
             for mcp_client in solver.mcp_clients:
-                if await mcp_client.is_connected() and mcp_client.server_name not in used_mcps:
-                    used_mcps.append(mcp_client.server_name)
+                if await mcp_client.is_connected() and mcp_client.server_name not in mcps:
+                    mcps.append(mcp_client.server_name)
 
             # If we've reached the limit of asker turns, stop
             if asker_turn >= asker_turns - 1:
@@ -55,7 +55,7 @@ async def converse(
             conversation.add_user_message(next_question)
             current_message = next_question
     except Exception as e:
-        return ConversationResult(conversation=conversation, used_mcps=used_mcps, success=False, error=str(e))
+        return ConversationResult(conversation=conversation, mcps=mcps, success=False, error=str(e))
     finally:
         # Clean up MCP connections
         try:
@@ -64,4 +64,4 @@ async def converse(
             # Log cleanup error but don't fail the conversation
             print(f"Warning: Error during cleanup: {cleanup_error}")
 
-    return ConversationResult(conversation=conversation, used_mcps=used_mcps, success=True, solver_agent=solver)
+    return ConversationResult(conversation=conversation, mcps=mcps, success=True, solver_agent=solver)

@@ -37,7 +37,7 @@
       "id": "snb_most_known_people",
       "question": "In the Samples database https://help.kusto.windows.net/, who is the most well-known person in the LDBC_SNB_Interactive graph by KNOWS in-degree? Use graph operators (e.g. graph-match)!",
       "asker_turns": 1,
-      "allowed_mcps": [
+      "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
       "expectations": {

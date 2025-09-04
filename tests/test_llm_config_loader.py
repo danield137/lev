@@ -178,7 +178,7 @@ def test_load_eval_with_mcps_new_config():
             "overrides": {"solver": {"persona": "concise_solver"}},
         },
         "mcp_servers": {"test-mcp": {"command": "python", "args": ["test_mcp.py"]}},
-        "data": [{"id": "test_case", "question": "Test question", "allowed_mcps": ["test-mcp"]}],
+        "data": [{"id": "test_case", "question": "Test question", "mcps": ["test-mcp"]}],
     }
 
     # Create temporary profiles file
@@ -241,7 +241,7 @@ def test_load_eval_with_mcps_legacy_config():
         "description": "Test MCP evaluation",
         "solver": {"provider": "lmstudio", "model": "test-model", "model_parameters": {"temperature": 0.1}},
         "mcp_servers": {"test-mcp": {"command": "python", "args": ["test_mcp.py"]}},
-        "data": [{"id": "test_case", "question": "Test question", "allowed_mcps": ["test-mcp"]}],
+        "data": [{"id": "test_case", "question": "Test question", "mcps": ["test-mcp"]}],
     }
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:

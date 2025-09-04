@@ -8,7 +8,7 @@ from lev.core.chat_history import ChatHistory
 @dataclass(slots=True)
 class ConversationResult:
     conversation: ChatHistory
-    used_mcps: List[str]
+    mcps: List[str]
     success: bool
     error: Optional[str] = None
     solver_agent: Optional[Agent] = None
@@ -21,8 +21,7 @@ class McpEvaluationResult:
     score: float
     reasoning: str
     conversation: ChatHistory
-    allowed_mcps: List[str]
-    used_mcps: List[str]
+    mcps: List[str]
     mcp_valid: bool
     tool_calls_sequence: List[Dict[str, Any]]
     conversation_trace: Optional[str] = ""

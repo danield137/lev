@@ -46,7 +46,7 @@
           "max_"
         }
       },
-      "allowed_mcps": ["filesystem-mcp"],
+      "mcps": ["filesystem-mcp"],
       "expectations": {
         "tool_calls": ["read_file"],
         "tool_inputs": {
@@ -69,7 +69,7 @@
       "id": "summarize_python_files",
       "question": "Read some files in the fw_directory (mainly runner and conversation), what is this folder about?",
       "asker_turns": 1,
-      "allowed_mcps": ["filesystem-mcp"],
+      "mcps": ["filesystem-mcp"],
       "expectations": {
         "tool_calls": ["list_tree", "read_file"],
         "tool_inputs": {

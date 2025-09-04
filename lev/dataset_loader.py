@@ -310,7 +310,7 @@ def load_mcp_dataset(
         scenario_config.solver = _parse_model_config(full_dataset["model_config"], "model_config")
 
     # Validate required fields for each scenario
-    required_fields = {"id", "question", "allowed_mcps"}
+    required_fields = {"id", "question", "mcps"}
     for i, scenario in enumerate(data):
         if not isinstance(scenario, dict):
             raise ValueError(f"Scenario {i} must be a dict, got {type(scenario).__name__}")
@@ -321,17 +321,17 @@ def load_mcp_dataset(
                 f"Scenario {i} (id: {scenario.get('id', 'unknown')}) missing required fields: {missing_fields}"
             )
 
-        # Validate allowed_mcps is a list
-        if not isinstance(scenario["allowed_mcps"], list):
+        # Validate mcps is a list
+        if not isinstance(scenario["mcps"], list):
             raise ValueError(
-                f"Scenario {i} 'allowed_mcps' must be a list, got {type(scenario['allowed_mcps']).__name__}"
+                f"Scenario {i} 'mcps' must be a list, got {type(scenario['mcps']).__name__}"
             )
 
-        # Validate that all allowed_mcps exist in mcp_servers (if mcp_servers defined)
+        # Validate that all mcps exist in mcp_servers (if mcp_servers defined)
         if mcp_servers:
-            allowed_mcps = set(scenario["allowed_mcps"])
+            mcps = set(scenario["mcps"])
             available_mcps = set(mcp_servers.keys())
-            missing_mcps = allowed_mcps - available_mcps
+            missing_mcps = mcps - available_mcps
             if missing_mcps:
                 raise ValueError(
                     f"Scenario {i} (id: {scenario.get('id', 'unknown')}) references undefined MCP servers: {missing_mcps}. "
@@ -340,7 +340,7 @@ def load_mcp_dataset(
 
         # Inject only the allowed mcp_servers configs into this scenario
         scenario_mcp_servers = {}
-        for mcp_name in scenario["allowed_mcps"]:
+        for mcp_name in scenario["mcps"]:
             if mcp_name in mcp_servers:
                 scenario_mcp_servers[mcp_name] = mcp_servers[mcp_name]
 
@@ -460,7 +460,7 @@ def load_eval_with_mcps(path: str) -> ResolvedEvalSuite:
             )
 
     # Validate required fields for each scenario
-    required_fields = {"id", "question", "allowed_mcps"}
+    required_fields = {"id", "question", "mcps"}
     for i, scenario in enumerate(data):
         if not isinstance(scenario, dict):
             raise ValueError(f"Scenario {i} must be a dict, got {type(scenario).__name__}")
@@ -471,17 +471,17 @@ def load_eval_with_mcps(path: str) -> ResolvedEvalSuite:
                 f"Scenario {i} (id: {scenario.get('id', 'unknown')}) missing required fields: {missing_fields}"
             )
 
-        # Validate allowed_mcps is a list
-        if not isinstance(scenario["allowed_mcps"], list):
+        # Validate mcps is a list
+        if not isinstance(scenario["mcps"], list):
             raise ValueError(
-                f"Scenario {i} 'allowed_mcps' must be a list, got {type(scenario['allowed_mcps']).__name__}"
+                f"Scenario {i} 'mcps' must be a list, got {type(scenario['mcps']).__name__}"
             )
 
-        # Validate that all allowed_mcps exist in mcp_servers (if mcp_servers defined)
+        # Validate that all mcps exist in mcp_servers (if mcp_servers defined)
         if mcp_servers:
-            allowed_mcps = set(scenario["allowed_mcps"])
+            mcps = set(scenario["mcps"])
             available_mcps = set(mcp_servers.keys())
-            missing_mcps = allowed_mcps - available_mcps
+            missing_mcps = mcps - available_mcps
             if missing_mcps:
                 raise ValueError(
                     f"Scenario {i} (id: {scenario.get('id', 'unknown')}) references undefined MCP servers: {missing_mcps}. "
@@ -490,7 +490,7 @@ def load_eval_with_mcps(path: str) -> ResolvedEvalSuite:
 
         # Inject only the allowed mcp_servers configs into this scenario
         scenario_mcp_servers = {}
-        for mcp_name in scenario["allowed_mcps"]:
+        for mcp_name in scenario["mcps"]:
             if mcp_name in mcp_servers:
                 scenario_mcp_servers[mcp_name] = mcp_servers[mcp_name]
 
@@ -555,19 +555,19 @@ def _configure_telemetry_logging(dataset: Dict[str, Any], suite_name: str) -> No
         mcp_logger.propagate = False
 
 
-def validate_mcp_usage(scenario: Dict[str, Any], used_mcps: List[str]) -> bool:
+def validate_mcp_usage(scenario: Dict[str, Any], mcps: List[str]) -> bool:
     """
     Validate that only allowed MCPs were used in a scenario.
 
     Args:
-        scenario: The scenario definition with 'allowed_mcps' field
-        used_mcps: List of MCP server names that were actually used
+        scenario: The scenario definition with 'mcps' field
+        mcps: List of MCP server names that were actually used
 
     Returns:
         True if all used MCPs are allowed, False otherwise
     """
-    allowed = set(scenario.get("allowed_mcps", []))
-    used = set(used_mcps)
+    allowed = set(scenario.get("mcps", []))
+    used = set(mcps)
 
     # Check if any disallowed MCPs were used
     disallowed_usage = used - allowed
