@@ -3,27 +3,28 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from lev.core.mcp import McpClientRegistry, ServerConfig
 from lev.core.provider_registry import LlmProviderRegistry
 from lev.llm_config_loader import LLMConfigLoader
 from lev.llm_providers.provider_factory import create_provider
+from lev.output import ResultSink, create_csv_result_sink
 
 
 @dataclass(slots=True)
 class ModelConfig:
     provider: str
     model: str
-    model_parameters: Dict[str, Any]
-    persona: Optional[str] = None  # Persona key or direct system prompt
+    model_parameters: dict[str, Any]
+    persona: str | None = None  # Persona key or direct system prompt
 
 
 @dataclass(slots=True)
 class SuiteConfig:
-    solver: Optional[ModelConfig] = None
-    asker: Optional[ModelConfig] = None
-    judge: Optional[ModelConfig] = None
+    solver: ModelConfig | None = None
+    asker: ModelConfig | None = None
+    judge: ModelConfig | None = None
 
 
 @dataclass(slots=True)
@@ -32,9 +33,10 @@ class ResolvedEvalSuite:
 
     name: str
     provider_registry: LlmProviderRegistry
-    mcps: Dict[str, ServerConfig]
+    mcps: dict[str, ServerConfig]
     mcp_registry: McpClientRegistry
-    evals: List[Dict[str, Any]]
+    evals: list[dict[str, Any]]
+    result_sink: ResultSink | None = None
 
 
 class DatasetType(str, Enum):
@@ -45,7 +47,7 @@ class DatasetType(str, Enum):
     MCP_EVAL = "mcp_eval"
 
 
-def load_dataset(path: str) -> Tuple[DatasetType, List[Dict[str, Any]], List[str]]:
+def load_dataset(path: str) -> tuple[DatasetType, list[dict[str, Any]], list[str]]:
     """
     Load a typed evaluation dataset from JSON file.
 
@@ -103,7 +105,7 @@ def load_dataset(path: str) -> Tuple[DatasetType, List[Dict[str, Any]], List[str
     return dataset_type, data, eval_method
 
 
-def _parse_model_config(config_data: Dict[str, Any], config_name: str) -> ModelConfig:
+def _parse_model_config(config_data: dict[str, Any], config_name: str) -> ModelConfig:
     """Parse and validate a model configuration from dataset JSON."""
     if not isinstance(config_data, dict):
         raise ValueError(f"Dataset '{config_name}' must be a dict, got {type(config_data).__name__}")
@@ -121,7 +123,7 @@ def _parse_model_config(config_data: Dict[str, Any], config_name: str) -> ModelC
     )
 
 
-def load_judge_cases(path: str = "simple_eval_dataset.json") -> List[Dict[str, Any]]:
+def load_judge_cases(path: str = "simple_eval_dataset.json") -> list[dict[str, Any]]:
     """
     Load judge evaluation cases from JSON file.
 
@@ -140,7 +142,7 @@ def load_judge_cases(path: str = "simple_eval_dataset.json") -> List[Dict[str, A
     return data
 
 
-def load_scenarios(path: str = "scenarios.json") -> List[Dict[str, Any]]:
+def load_scenarios(path: str = "scenarios.json") -> list[dict[str, Any]]:
     """
     Load scenario evaluation cases from JSON file.
 
@@ -159,7 +161,7 @@ def load_scenarios(path: str = "scenarios.json") -> List[Dict[str, Any]]:
     return data
 
 
-def load_scenarios_with_eval_method(path: str = "scenarios.json") -> Tuple[List[Dict[str, Any]], List[str]]:
+def load_scenarios_with_eval_method(path: str = "scenarios.json") -> tuple[list[dict[str, Any]], list[str]]:
     """
     Load scenario evaluation cases from JSON file with eval_method.
 
@@ -178,7 +180,7 @@ def load_scenarios_with_eval_method(path: str = "scenarios.json") -> Tuple[List[
     return data, eval_method
 
 
-def load_personas(path: str = "personas.json") -> Dict[str, Dict[str, str]]:
+def load_personas(path: str = "personas.json") -> dict[str, dict[str, str]]:
     """
     Load persona definitions from JSON file.
 
@@ -230,7 +232,7 @@ def get_persona_system_prompt(persona_key: str, personas_path: str = "personas.j
     return personas[persona_key]["system_prompt"]
 
 
-def resolve_persona_system_prompt(persona: Optional[str], personas_path: str = "personas.json") -> Optional[str]:
+def resolve_persona_system_prompt(persona: str | None, personas_path: str = "personas.json") -> str | None:
     """
     Resolve a persona reference to its system prompt.
 
@@ -263,7 +265,7 @@ def resolve_persona_system_prompt(persona: Optional[str], personas_path: str = "
 
 def load_mcp_dataset(
     path: str = "mcp_eval_dataset.json",
-) -> Tuple[List[Dict[str, Any]], Dict[str, ServerConfig], SuiteConfig]:
+) -> tuple[list[dict[str, Any]], dict[str, ServerConfig], SuiteConfig]:
     """
     Load MCP evaluation dataset from JSON file.
 
@@ -380,6 +382,9 @@ def load_eval_with_mcps(path: str) -> ResolvedEvalSuite:
 
     # Configure MCP call logging if enabled
     _configure_telemetry_logging(full_dataset, name)
+
+    # Configure results sink if enabled
+    result_sink = _configure_results_sink(full_dataset, name)
 
     # Check if we have new llm_config section
     llm_config_data = full_dataset.get("llm_config")
@@ -503,11 +508,11 @@ def load_eval_with_mcps(path: str) -> ResolvedEvalSuite:
     mcp_registry = McpClientRegistry.from_dict(mcp_servers)
 
     return ResolvedEvalSuite(
-        name=name, provider_registry=provider_registry, mcps=mcp_servers, mcp_registry=mcp_registry, evals=data
+        name=name, provider_registry=provider_registry, mcps=mcp_servers, mcp_registry=mcp_registry, evals=data, result_sink=result_sink
     )
 
 
-def _configure_telemetry_logging(dataset: Dict[str, Any], suite_name: str) -> None:
+def _configure_telemetry_logging(dataset: dict[str, Any], suite_name: str) -> None:
     """
     Configure telemetry logging based on dataset configuration.
 
@@ -555,7 +560,34 @@ def _configure_telemetry_logging(dataset: Dict[str, Any], suite_name: str) -> No
         mcp_logger.propagate = False
 
 
-def validate_mcp_usage(scenario: Dict[str, Any], mcps: List[str]) -> bool:
+def _configure_results_sink(dataset: dict[str, Any], suite_name: str) -> ResultSink | None:
+    """
+    Configure results sink based on dataset configuration.
+
+    Args:
+        dataset: The full dataset configuration
+        suite_name: Base name for the suite (used for file naming)
+
+    Returns:
+        ResultSink instance if results logging is enabled, None otherwise
+    """
+    # Check for logging configuration
+    logging_config = dataset.get("logging", {})
+    results_enabled = logging_config.get("results", False)
+    
+    if not results_enabled:
+        return None
+    
+    # Get sink type (default to CSV)
+    sink_type = logging_config.get("results_sink", "csv")
+    
+    if sink_type == "csv":
+        return create_csv_result_sink(suite_name)
+    else:
+        # For future extensibility
+        raise ValueError(f"Unknown results sink type: {sink_type}. Supported types: csv")
+
+def validate_mcp_usage(scenario: dict[str, Any], mcps: list[str]) -> bool:
     """
     Validate that only allowed MCPs were used in a scenario.
 

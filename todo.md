@@ -7,11 +7,16 @@
 7. propagate errors from mcp servers running locally
 8. bug when multiple tool calls are made, the output repeats
 9. handle mcp instructions (should be sent along with available tools)
+
+
+
 graph issues:
-1. No clear way to describe a graph (get schema / topology) or sample it
-2. By default, won't resort to graph semantics (graph-match)
-3. Even if forced to (say, by having a `kusto_graph_query` tool specifically), often produces wrong queries.
-4. 
+---
+1. By default, won't resort to graph semantics (graph-match) 
+2. No id() function confuses the model.
+3. No clear way to describe a graph (get schema / topology) or sample it
+4. Even if forced to (say, by having a `kusto_graph_query` tool specifically), often produces wrong queries.
+
 
 # context management policy
 Introduce a policy to manage context usage, limit size and decide what to do when breaching.

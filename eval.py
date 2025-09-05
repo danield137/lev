@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
+from termcolor import colored
 
 load_dotenv()
 
@@ -33,11 +34,11 @@ async def run_mcp_evaluations(dataset_file: str, limit: Optional[int] = None):
         eval_files.append(dataset_file)
 
     for eval_file in eval_files:
-        print(f"Loading dataset from {eval_file}")
+        print(f"Loading dataset from {colored(eval_file, 'yellow')}")
         resolved = load_eval_with_mcps(eval_file)
 
         # Run evaluations using shared infrastructure
-        await run_evals(resolved.name, resolved.evals, resolved.provider_registry, resolved.mcp_registry, limit=limit)
+        await run_evals(resolved.name, resolved.evals, resolved.provider_registry, resolved.mcp_registry, limit=limit, result_sink=resolved.result_sink)
 
 
 async def main():
@@ -46,7 +47,6 @@ async def main():
     parser.add_argument(
         "dataset",
         nargs="?",
-        default="fs_mcp_dataset.json",
         help="Path to the dataset JSON file (default: fs_mcp_dataset.json)",
     )
     parser.add_argument(

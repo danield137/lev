@@ -1,5 +1,4 @@
 import json
-from typing import List, Optional
 
 from termcolor import colored
 
@@ -24,7 +23,7 @@ def get_result_icon(score: float) -> str:
     return "❌"
 
 
-def print_suite_result(result: McpEvaluationResult, index: int, total: int, display_name: Optional[str] = None):
+def print_suite_result(result: McpEvaluationResult, index: int, total: int, display_name: str | None = None):
     """Prints a formatted result for a single suite."""
     name = display_name if display_name is not None else result.suite_id
     print(f"🎯 Eval {index}/{total}: {name}")
@@ -80,23 +79,30 @@ def print_suite_result(result: McpEvaluationResult, index: int, total: int, disp
                         print(f"{cont}{full_name}({args_str})")
 
                 elif item["type"] == "response":
-                    content = item.get("content", "")
+                    content: str = item.get("content", "")
+                    max_length = 100
                     try:
-                        parsed_response = json.loads(content)
-                        if isinstance(parsed_response, dict) and "result" in parsed_response:
-                            content_preview = str(parsed_response["result"])
-                        elif isinstance(parsed_response, dict) and "content" in parsed_response:
-                            content_preview = parsed_response["content"]
-                        else:
-                            content_preview = content
+                        content = content.strip()
+                        if content.startswith("[") or content.startswith("{"):
+                            parsed_response = json.loads(content)
+                            if isinstance(parsed_response, dict):
+                                if "result" in parsed_response:
+                                    content = str(parsed_response["result"])
+                                elif "content" in parsed_response:
+                                    content = parsed_response["content"]
+                                elif "error" in parsed_response:
+                                    content = f"Error: {parsed_response['error']}"
+                                    max_length = 300 # show more of error messages
+                            elif isinstance(parsed_response, list):
+                                content = ", ".join(map(str, parsed_response))
                     except Exception:
-                        content_preview = content
+                        content = content
 
-                    if len(content_preview) > 100:
-                        trimmed = content_preview[:100]
-                        preview = trimmed + f"... ({len(content_preview.split())-len(trimmed.split())} tokens excluded)"
+                    if len(content) > max_length:
+                        trimmed = content[:max_length]
+                        preview = trimmed + f"... ({len(content.split())-len(trimmed.split())} tokens excluded)"
                     else:
-                        preview = content_preview
+                        preview = content
                     print(f"{cont}← {preview}")
 
         # Final assistant message bubble
@@ -107,7 +113,7 @@ def print_suite_result(result: McpEvaluationResult, index: int, total: int, disp
     print()
 
 
-def print_summary(results: List[McpEvaluationResult], final: bool = False, display_names: Optional[List[str]] = None):
+def print_summary(results: list[McpEvaluationResult], final: bool = False, display_names: list[str] | None = None):
     """Print evaluation summary statistics."""
     if not results:
         return

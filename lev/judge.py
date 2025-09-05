@@ -3,7 +3,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Generic, Sequence, TypeVar
 
 import numpy as np
 
@@ -24,7 +24,7 @@ class MatchInput:
 @dataclass
 class CritiqueInput:
     conversation: ChatHistory
-    tool_calls: Optional[List[dict[str, Any]]] = None
+    tool_calls: list[dict[str, Any]] | None = None
 
 
 @dataclass
@@ -87,10 +87,10 @@ class CritiqueScorer(Scorer[CritiqueInput]):
 
     llm_provider: LlmProvider
     context_compressor: ContextCompressor
-    system_prompt: Optional[str]
+    system_prompt: str | None
 
     def __init__(
-        self, llm_provider: LlmProvider, context_compressor: ContextCompressor, system_prompt: Optional[str] = None
+        self, llm_provider: LlmProvider, context_compressor: ContextCompressor, system_prompt: str | None = None
     ):
         self.llm_provider = llm_provider
         self.context_compressor = context_compressor
@@ -134,7 +134,7 @@ class CritiqueScorer(Scorer[CritiqueInput]):
                 "mode": EvaluationMode.CRITIQUE.value,
             }
 
-    def _serialize_tool_calls(self, tool_calls: Optional[List[dict[str, Any]]], max_length: int) -> str:
+    def _serialize_tool_calls(self, tool_calls: list[dict[str, Any]] | None, max_length: int) -> str:
         """
         Serialize tool calls to JSON, adapting to available budget.
 
@@ -185,7 +185,7 @@ class CritiqueScorer(Scorer[CritiqueInput]):
         return f"[Tool calls omitted: {len(tool_calls)} calls, {len(full_json)} chars over {max_length} limit]"
 
     def _build_critic_prompt(
-        self, user_query: str, conversation_trace: Optional[str], tool_calls_trace: Optional[str] = None
+        self, user_query: str, conversation_trace: str | None, tool_calls_trace: str | None = None
     ) -> str:
         return JUDGE_CRITIQUE_USER_PROMPT_TEMPLATE.format(
             user_query=user_query, conversation=conversation_trace, tool_calls_trace=tool_calls_trace
@@ -195,7 +195,7 @@ class CritiqueScorer(Scorer[CritiqueInput]):
 class ExtractScorer(Scorer[ExtractInput]):
     """Extract scalar from assistant answer and compare to expected."""
 
-    def __init__(self, llm_provider: LlmProvider, system_prompt: Optional[str] = None):
+    def __init__(self, llm_provider: LlmProvider, system_prompt: str | None = None):
         self.llm_provider = llm_provider
         self.system_prompt = system_prompt
 
@@ -288,7 +288,7 @@ class Judge:
         self,
         llm_provider: LlmProvider | None = None,
         default_mode: EvaluationMode = EvaluationMode.MATCH,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
     ):
         self.llm_provider = llm_provider or create_provider()
         self.default_mode = default_mode
@@ -297,10 +297,10 @@ class Judge:
 
     async def score(
         self,
-        expected: Optional[dict[str, Any]] = None,
-        conversation: Optional[ChatHistory] = None,
-        tool_calls: Optional[List[dict[str, Any]]] = None,
-        mode: Optional[Union[EvaluationMode, Sequence[EvaluationMode]]] = None,
+        expected: dict[str, Any] | None = None,
+        conversation: ChatHistory | None = None,
+        tool_calls: list[dict[str, Any]] | None = None,
+        mode: EvaluationMode | Sequence[EvaluationMode] | None = None,
     ) -> dict[str, Any]:
         modes = [self.default_mode] if mode is None else ([mode] if isinstance(mode, EvaluationMode) else list(mode))
 
@@ -315,9 +315,9 @@ class Judge:
     async def _score_single(
         self,
         eval_mode: EvaluationMode,
-        expected: Optional[dict[str, Any]],
-        conversation: Optional[ChatHistory],
-        tool_calls: Optional[List[dict[str, Any]]],
+        expected: dict[str, Any] | None,
+        conversation: ChatHistory | None,
+        tool_calls: list[dict[str, Any]] | None,
     ) -> dict[str, Any]:
         if eval_mode == EvaluationMode.MATCH:
             if not conversation or expected is None:

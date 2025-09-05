@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from termcolor import colored
 
@@ -10,12 +10,13 @@ from lev.core.results import McpEvaluationResult
 from lev.dataset_loader import ModelConfig, validate_mcp_usage
 from lev.judge import EvaluationMode, Judge
 from lev.llm_providers.provider_factory import create_provider
+from lev.output import ResultSink
 from lev.reporting import print_suite_result, print_summary
 
 
 def print_header(
     dataset_name: str,
-    suites: List[Dict[str, Any]],
+    suites: list[dict[str, Any]],
     mcp_registry: McpClientRegistry,
     provider_registry: LlmProviderRegistry,
 ) -> None:
@@ -38,7 +39,7 @@ def print_header(
     print()
 
 
-def create_judge(model_config: Optional[ModelConfig] = None) -> Judge:
+def create_judge(model_config: ModelConfig | None = None) -> Judge:
     """Create a Judge instance based on suite configuration."""
     if model_config:
         judge_provider = create_provider(
@@ -51,11 +52,12 @@ def create_judge(model_config: Optional[ModelConfig] = None) -> Judge:
 
 async def run_evals(
     dataset_name: str,
-    suites: List[Dict[str, Any]],
+    suites: list[dict[str, Any]],
     provider_registry: LlmProviderRegistry,
     mcp_registry: McpClientRegistry,
-    limit: Optional[int] = None,
-) -> List[McpEvaluationResult]:
+    limit: int | None = None,
+    result_sink: ResultSink | None = None,
+) -> list[McpEvaluationResult]:
     # Apply limit if specified
     if limit is not None and limit > 0:
         suites = suites[:limit]
@@ -262,5 +264,9 @@ async def run_evals(
 
     # Print final summary
     print_summary(results, final=True, display_names=display_names)
+
+    # Write results to sink if configured
+    if result_sink:
+        result_sink.write(results)
 
     return results

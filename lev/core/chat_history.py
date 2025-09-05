@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional, cast
+from typing import Any, cast
 
 
 @dataclass(slots=True)
@@ -63,9 +63,9 @@ class ChatHistory:
 
     def get_conversation(
         self,
-        with_participants: Optional[bool] = True,
-        with_system: Optional[bool] = False,
-        with_tools: Optional[bool] = False,
+        with_participants: bool | None = True,
+        with_system: bool | None = False,
+        with_tools: bool | None = False,
     ) -> list[ParticipantMessage]:
         if not with_participants and not with_system and not with_tools:
             raise ValueError("At least one message type must be included.")

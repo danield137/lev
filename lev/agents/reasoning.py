@@ -152,7 +152,7 @@ class ReasoningAgent(ToolsAgent):
                 validation = await self.inner_provider.chat_complete(messages=[{"role": "system", "content": prompt}])
 
                 # Parse validation response
-                validation_result = self._parse_json_response(validation.content or "{}")
+                validation_result = self._parse_json_response(validation.content)
 
                 if validation_result.get("valid", True):
                     # Response is satisfactory
@@ -307,8 +307,10 @@ class ReasoningAgent(ToolsAgent):
 
         return False
 
-    def _parse_json_response(self, content: str) -> dict[str, Any]:
+    def _parse_json_response(self, content: str | None) -> dict[str, Any]:
         """Helper to parse JSON responses from introspection calls."""
+        if not content:
+            return {}
         try:
             return json.loads(content.strip())
         except (json.JSONDecodeError, AttributeError):
