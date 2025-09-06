@@ -3,7 +3,7 @@ import json
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any
 
 from lev.core.chat_history import ChatHistory
 from lev.core.results import McpEvaluationResult
@@ -57,8 +57,8 @@ class TsvResultSink:
         return data
 
 
-def create_tsv_result_sink(suite_name: str) -> TsvResultSink:
+def create_tsv_result_sink(manifest_name: str) -> TsvResultSink:
     """Create a TSV result sink with timestamped filename."""
     epoch = int(time.time())
-    filename = f"{suite_name}_results_{epoch}.tsv"
+    filename = f"{manifest_name}_results_{epoch}.tsv"
     return TsvResultSink(filename)

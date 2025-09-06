@@ -166,9 +166,9 @@ class AzureOpenAIProvider(BaseLlmProvider):
         cache_options = TokenCachePersistenceOptions(
             name=cache_name,
             allow_unencrypted_storage=allow_unencrypted_storage,
-        )  # type: ignore
+        ) # type: ignore
 
-        credential = InteractiveBrowserCredential(cache_persistence_options=cache_options)  # type: ignore
+        credential = InteractiveBrowserCredential(cache_persistence_options=cache_options) # type: ignore
 
         logger.info("Getting token from Azure credential...")
         token = credential.get_token("https://cognitiveservices.azure.com/.default")
@@ -235,7 +235,7 @@ class AzureOpenAIProvider(BaseLlmProvider):
             if "tool_call_id" in msg:
                 openai_msg["tool_call_id"] = msg["tool_call_id"]  # type: ignore
 
-            openai_messages.append(openai_msg)
+            openai_messages.append(openai_msg) # type: ignore
 
         model_name = model or self.default_model
 
