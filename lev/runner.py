@@ -2,10 +2,10 @@ from termcolor import colored
 
 from lev.conversation import converse
 from lev.core.chat_history import ChatHistory
-from lev.core.config import Eval, ModelConfig
-from lev.core.mcp import McpClientRegistry
+from lev.config import Eval, ModelConfig
+from lev.host.mcp import McpClientRegistry
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.core.results import McpEvaluationResult, ResultSink
+from lev.results import McpEvaluationResult, ResultSink
 from lev.judge import EvaluationMode, Judge
 from lev.llm_providers.provider_factory import create_provider
 from lev.reporting import print_suite_result, print_summary

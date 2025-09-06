@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from lev.core.mcp import McpServerConfig
-
 
 @dataclass(slots=True)
 class EvalSolverOptions:

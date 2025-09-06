@@ -56,7 +56,7 @@ class ReasoningAgent(ToolsAgent):
         self.max_validation_attempts = max_validation_attempts
         self.inner_provider = inner_provider or llm_provider
 
-    async def message(self, user_message: str, track: bool = True) -> str:
+    async def message(self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True) -> ModelResponse:
         """
         Orchestrates reasoning with introspection gates:
           1) Get initial response (with or without tools)
@@ -64,9 +64,14 @@ class ReasoningAgent(ToolsAgent):
           3) Validate final answer before returning
           4) Ask developer followups if answer is insufficient
         """
-        self.chat_history.add_user_message(user_message)
+        if track:
+            self.chat_history.add_user_message(user_message)
+        
         try:
-            tools = await self._get_tool_specs()
+            # Use provided tools or get tool specs from connected clients
+            if tools is None:
+                tools = await self._get_tool_specs()
+            
             step_count = 0
 
             # Get initial response
@@ -80,21 +85,17 @@ class ReasoningAgent(ToolsAgent):
                 step_count += 1
                 response = await self._execute_tools_with_introspection(response, tools)
 
-            # Extract final content
-            final_content = response.content or "No response generated."
-
-            # Gate: Validate the answer before returning
-            validated_response = await self._introspect_answer(final_content)
-
-            if track:
-                self.chat_history.add_assistant_message(validated_response)
-            return validated_response
+            # For now, return the response directly - introspection will be handled by McpHost
+            if track and response.content:
+                self.chat_history.add_assistant_message(response.content)
+            
+            return response
 
         except Exception as e:
-            err = f"Error: {e}"
+            error_response = ModelResponse(content=f"Error: {e}")
             if track:
-                self.chat_history.add_assistant_message(err)
-            return err
+                self.chat_history.add_assistant_message(error_response.content)
+            return error_response
 
     # ============= Planning helpers (explicit names) =============
 

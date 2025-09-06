@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from lev.core.config import Eval
-from lev.core.mcp import McpClientRegistry, McpServerConfig
+from lev.config import Eval
+from lev.host.mcp import McpClientRegistry, McpServerConfig
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.core.results import ResultSink
+from lev.results import ResultSink
 from lev.llm_config_loader import LLMConfig
 
 

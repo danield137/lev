@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any, Optional
 
 from lev.core.chat_history import ChatHistory
-from lev.core.llm_provider import LlmProvider
+from lev.core.llm_provider import LlmProvider, ModelResponse
 
 
 class Agent(ABC):
@@ -35,7 +35,7 @@ class Agent(ABC):
         ...
 
     @abstractmethod
-    async def message(self, user_message: str, track: bool = True) -> str | None:
+    async def message(self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True) -> ModelResponse:
         """Process a user message and return a response."""
         ...
 
@@ -46,14 +46,11 @@ class Agent(ABC):
 
 
 class SimpleAgent(Agent):
-    async def message(self, user_message: str, track: bool = True) -> str | None:
+    async def message(self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True) -> ModelResponse:
         if track:
             self.chat_history.add_user_message(user_message)
         messages = [{"role": m.role, "content": m.content} for m in self.chat_history.get_conversation(with_system=True)]  # type: ignore
-        response = await self.llm_provider.chat_complete(messages)
-        result = None
-        if response and response.content:
-            result = response.content.strip()
-            if track:
-                self.chat_history.add_assistant_message(result)
-        return result
+        response = await self.llm_provider.chat_complete(messages, tools=tools)
+        if response and response.content and track:
+            self.chat_history.add_assistant_message(response.content)
+        return response

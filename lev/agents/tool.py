@@ -2,8 +2,8 @@ import json
 from typing import Any
 
 from lev.core.agent import Agent
-from lev.core.llm_provider import LlmProvider
-from lev.core.mcp import McpClient
+from lev.core.llm_provider import LlmProvider, ModelResponse
+from lev.host.mcp_client import McpClient
 from lev.llm_providers.provider_factory import create_tool_enabled_provider
 from lev.prompts.tool_agent import TOOL_AGENT_DEFAULT_SYSTEM_PROMPT
 
@@ -36,13 +36,19 @@ class ToolsAgent(Agent):
         for c in self.mcp_clients:
             await c.disconnect()
 
-    async def message(self, user_message: str, track: bool = True) -> str:
+    async def message(self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True) -> ModelResponse:
         if track:
             self.chat_history.add_user_message(user_message)
-        resp = await self._answer_with_tools()
-        if track:
-            self.chat_history.add_assistant_message(resp)
-        return resp
+        
+        # Use provided tools or get tool specs from connected clients
+        if tools is None:
+            tools = await self._get_tool_specs()
+        
+        # Get messages for the LLM
+        messages = self.chat_history.to_role_content_messages(with_system=True)
+        
+        # Call the LLM with tools - return raw ModelResponse
+        return await self.llm_provider.chat_complete(messages, tools=tools)
 
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         for c in self.mcp_clients:

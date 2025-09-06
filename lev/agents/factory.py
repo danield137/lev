@@ -1,8 +1,8 @@
 from lev.agents.reasoning import ReasoningAgent
 from lev.core.agent import SimpleAgent
-from lev.core.config import Eval
+from lev.config import Eval
 from lev.core.llm_provider import LlmProvider
-from lev.core.mcp import McpClientRegistry
+from lev.host.mcp import McpClientRegistry
 from lev.loader import get_persona_system_prompt
 from lev.prompts.reasoning import REASONING_AGENT_DEFAULT_SYSTEM_PROMPT
 

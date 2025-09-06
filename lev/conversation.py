@@ -1,9 +1,9 @@
 from lev.agents.factory import create_agent_from_provider, create_reasoning_agent_from_provider
 from lev.core.chat_history import ChatHistory
-from lev.core.config import Eval
-from lev.core.mcp import McpClientRegistry
+from lev.config import Eval
+from lev.host.mcp import McpClientRegistry
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.core.results import ConversationResult
+from lev.results import ConversationResult
 
 
 async def converse(
