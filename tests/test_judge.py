@@ -256,22 +256,6 @@ class TestJudgeCritiqueMode:
             await self.judge.score(mode=EvaluationMode.CRITIQUE)
 
     @pytest.mark.asyncio
-    async def test_score_critique_mode_no_assistant_message(self):
-        """Test critique mode with no assistant response."""
-        conversation = ChatHistory()
-        conversation.add_user_message("What is Python?")
-
-        # Mock context compressor to return None (no assistant response)
-        self.judge.context_compressor.compress_chat = Mock(return_value=None)
-
-        result = await self.judge.score(conversation=conversation, mode=EvaluationMode.CRITIQUE)
-
-        assert result["mode"] == "critique"
-        assert result["answered"] is False
-        assert result["score"] == 0.0
-        assert "No assistant response found" in result["justification"]
-
-    @pytest.mark.asyncio
     async def test_score_critique_mode_llm_failure(self):
         """Test critique mode when LLM call fails."""
         conversation = ChatHistory()

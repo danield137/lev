@@ -1,4 +1,5 @@
 {
+  "schema_version": 1,
   "type": "mcp_eval",
   "description": "MCP evaluation scenarios for Kusto/Microsoft Fabric RTI queries",
   "logging": {
@@ -33,14 +34,20 @@
       }
     }
   },
-  "data": [
+  "evals": [
     {
       "id": "snb_most_known_people_with_hints",
       "question": "In the Samples database https://help.kusto.windows.net/, who is the most well-known person in the LDBC_SNB_Interactive graph by KNOWS in-degree? Use graph operators (e.g. graph-match)!",
-      "asker_turns": 1,
-      "mcps": [
-        "microsoft-fabric-rti-mcp"
-      ],
+      "execution": {
+        "mcps": ["microsoft-fabric-rti-mcp"],
+        "solver": {
+          "max_reasoning_steps": 4,
+          "max_retrospective_turns": 1
+        },
+        "asker": {
+          "max_turns": 1
+        }
+      },
       "expectations": {
         "tool_calls": [
           "kusto_query"
@@ -69,15 +76,23 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": "Person::32985348834375"}]
+      "scoring": [{"type": "llm_judge", "mode": "critique"}, {"type": "llm_judge", "mode": "extract", "expected": "Person::32985348834375"}]
     },
     {
       "id": "snb_most_known_people_no_hints",
       "question": "In the Samples database https://help.kusto.windows.net/, who is the most well-known person in the LDBC_SNB_Interactive graph",
-      "asker_turns": 1,
-      "mcps": [
-        "microsoft-fabric-rti-mcp"
-      ],
+      "execution": {
+        "mcps": [
+          "microsoft-fabric-rti-mcp"
+        ],
+        "solver": {
+          "max_reasoning_steps": 4,
+          "max_retrospective_turns": 1
+        },
+        "asker": {
+          "max_turns": 1
+        }
+      },
       "expectations": {
         "tool_calls": [
           "kusto_query"
@@ -106,15 +121,23 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": "Person::32985348834375"}]
+      "scoring": [{"type": "llm_judge", "mode": "critique"}, {"type": "llm_judge", "mode": "extract", "expected": "Person::32985348834375"}]
     },
     {
       "id": "snb_degrees_of_separation",
       "question": "In the Samples database https://help.kusto.windows.net/, what is the minimal degree of separation between Person::94 and Person::17592186045864?",
-      "asker_turns": 1,
-      "mcps": [
-        "microsoft-fabric-rti-mcp"
-      ],
+      "execution": {
+        "mcps": [
+          "microsoft-fabric-rti-mcp"
+        ],
+        "solver": {
+          "max_reasoning_steps": 4,
+          "max_retrospective_turns": 1
+        },
+        "asker": {
+          "max_turns": 2
+        }
+      },
       "expectations": {
         "tool_calls": [
           "kusto_query"
@@ -143,7 +166,7 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 2}]
+      "scoring": [{"type": "llm_judge", "mode": "critique"}, {"type": "llm_judge", "mode": "extract", "expected": 2}]
     }
   ]
 }

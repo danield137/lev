@@ -1,22 +1,21 @@
-from typing import Any, Dict
-
 from lev.agents.factory import create_agent_from_provider, create_reasoning_agent_from_provider
 from lev.core.chat_history import ChatHistory
+from lev.core.config import Eval
 from lev.core.mcp import McpClientRegistry
 from lev.core.provider_registry import LlmProviderRegistry
 from lev.core.results import ConversationResult
 
 
 async def converse(
-    eval_config: Dict[str, Any], mcp_registry: McpClientRegistry, provider_registry: LlmProviderRegistry
+    eval: Eval, mcp_registry: McpClientRegistry, provider_registry: LlmProviderRegistry
 ) -> ConversationResult:
     # Create agents using provider registry
-    asker = create_agent_from_provider(eval_config, provider_registry.get_asker())
-    solver = create_reasoning_agent_from_provider(eval_config, provider_registry.get_solver(), mcp_registry)
+    asker = create_agent_from_provider(eval, provider_registry.get_asker())
+    solver = create_reasoning_agent_from_provider(eval, provider_registry.get_solver(), mcp_registry)
 
     # Initialize conversation
     conversation = ChatHistory()
-    initial_question = eval_config["question"]
+    initial_question = eval.question
     conversation.add_user_message(initial_question)
 
     mcps = []
@@ -25,7 +24,7 @@ async def converse(
         # Initialize solver agent (connects to MCP)
         await solver.initialize()
 
-        asker_turns = int(eval_config.get("asker_turns", 1))
+        asker_turns = eval.execution.asker.max_turns if eval.execution.asker else 1
         asker.chat_history.add_assistant_message(initial_question)  # Asker sees the initial question
         current_message = initial_question
 

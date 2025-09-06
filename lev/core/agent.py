@@ -1,9 +1,5 @@
-"""
-Base agent abstract class.
-"""
-
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Optional
 
 from lev.core.chat_history import ChatHistory
 from lev.core.llm_provider import LlmProvider

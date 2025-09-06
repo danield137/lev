@@ -51,8 +51,8 @@ def log_mcp_call(server_name: str, tool_name: str, arguments: dict[str, Any], re
         )
 
 
-@dataclass(slots=True, frozen=True)
-class ServerConfig:
+@dataclass(slots=True)
+class McpServerConfig:
     """Configuration for an MCP server."""
 
     name: str
@@ -63,9 +63,9 @@ class ServerConfig:
 
 
 class McpClient:
-    config: ServerConfig
+    config: McpServerConfig
 
-    def __init__(self, config: ServerConfig):
+    def __init__(self, config: McpServerConfig):
         self.server_name = config.name
         self.session: ClientSession | None = None
         self.stdio_context: Any | None = None
@@ -246,7 +246,7 @@ class McpClientRegistry:
     def __init__(self):
         self._servers: dict[str, McpClient] = {}
 
-    def register_server(self, config: ServerConfig):
+    def register_server(self, config: McpServerConfig):
         """Register a server configuration."""
         self._servers[config.name] = McpClient(config)
 
@@ -263,7 +263,7 @@ class McpClientRegistry:
         """Create a registry from a dictionary of server configurations."""
         registry = cls()
         for name, config in mcp_servers.items():
-            server_config = ServerConfig(
+            server_config = McpServerConfig(
                 name=name,
                 command=config.get("command", ""),
                 args=config.get("args", []),
@@ -271,4 +271,13 @@ class McpClientRegistry:
                 suppress_output=config.get("suppress_output", True),  # Default to suppressing output
             )
             registry.register_server(server_config)
+        return registry
+
+    @classmethod
+    def from_config(cls, configs: dict[str, McpServerConfig]) -> McpClientRegistry:
+        """Create a registry from a list of server configurations."""
+        registry = cls()
+        for name, config in configs.items():
+            config.name = name
+            registry.register_server(config)
         return registry

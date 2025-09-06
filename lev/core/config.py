@@ -1,0 +1,53 @@
+from dataclasses import dataclass
+from typing import Any
+
+from lev.core.mcp import McpServerConfig
+
+
+@dataclass(slots=True)
+class EvalSolverOptions:
+    max_reasoning_steps: int = 3
+    max_retrospective_turns: int = 1
+
+
+@dataclass(slots=True)
+class EvalAskerOptions:
+    max_turns: int = 1
+
+
+@dataclass(slots=True)
+class EvalExecution:
+    mcps: list[str]
+    solver: EvalSolverOptions | None = None
+    asker: EvalAskerOptions | None = None
+
+
+@dataclass(slots=True)
+class Scorer:
+    type: str
+    mode: str | None = None
+    parameters: dict[str, Any] | None = None
+
+
+@dataclass(slots=True)
+class Eval:
+    id: str
+    question: str
+    execution: EvalExecution
+    scoring: list[Scorer]
+    expectations: dict[str, Any] | None = None
+
+
+@dataclass(slots=True)
+class ModelConfig:
+    provider: str
+    model: str
+    model_parameters: dict[str, Any]
+    persona: str | None = None  # Persona key or direct system prompt
+
+
+@dataclass(slots=True)
+class RolesConfig:
+    solver: ModelConfig | None = None
+    asker: ModelConfig | None = None
+    judge: ModelConfig | None = None

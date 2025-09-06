@@ -233,6 +233,11 @@ class ChatHistory:
                         lines.append(f"ASSISTANT 💬 {text}")
                     assistant_prefix_active = False
 
+            # elif role == "developer":
+            #     content = self._to_str(msg.get("content", "") or "")
+            #     lines.append(f"{cont}· {content}")
+            #     # keep assistant_prefix_active unchanged
+
             elif role == "tool":
                 # Tool response preview under assistant block
                 preview = self._to_str(msg.get("content", "") or "")

@@ -1,7 +1,3 @@
-"""
-LMStudio provider implementation.
-"""
-
 import json
 from typing import Any, Optional, cast
 

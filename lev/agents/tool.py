@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional
+from typing import Any
 
 from lev.core.agent import Agent
 from lev.core.llm_provider import LlmProvider
@@ -16,10 +16,10 @@ class ToolsAgent(Agent):
         self,
         llm_provider: LlmProvider,
         system_prompt: str,
-        mcp_clients: Optional[list[McpClient]] = None,
+        mcp_clients: list[McpClient] | None = None,
         *,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
     ):
         llm_provider = llm_provider or create_tool_enabled_provider()
         self.mcp_clients = mcp_clients or []
@@ -114,7 +114,7 @@ class ToolsAgent(Agent):
             for tc in tool_calls
         ]
 
-    async def _get_tool_specs(self) -> Optional[list[dict[str, Any]]]:
+    async def _get_tool_specs(self) -> list[dict[str, Any]] | None:
         specs: list[dict[str, Any]] = []
         for c in self.mcp_clients:
             try:

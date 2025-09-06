@@ -92,7 +92,7 @@ class ProviderProfile:
             api_key = os.getenv(self.api_key_env)
             if not api_key and self.provider != ProviderType.AZURE_OPENAI:  # AZURE OPENAI can use integrated auth
                 raise ValueError(f"Environment variable {self.api_key_env} not set")
-            config["api_key"] = api_key
+            config["api_key"] = api_key  # type: ignore
 
         if self.endpoint_env:
             endpoint = os.getenv(self.endpoint_env)
@@ -174,7 +174,7 @@ class RoleConfig:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class LLMConfig:
     """Top-level LLM configuration for an eval."""
 
@@ -262,11 +262,7 @@ class LLMConfigLoader:
 
         return profiles
 
-    def get_llm_config(self, llm_config_data: Dict[str, Any], role: str) -> ResolvedLLMConfig:
-        """Get the complete LLM configuration for a specific role."""
-        # Parse LLM config
-        llm_config = LLMConfig.from_dict(llm_config_data)
-
+    def get_llm_config(self, llm_config: LLMConfig, role: str) -> ResolvedLLMConfig:
         # Get active profile name (can be overridden by environment)
         profile_name = os.getenv("EVAL_PROVIDER_PROFILE", llm_config.active_profile)
 
@@ -278,8 +274,16 @@ class LLMConfigLoader:
 
         # Start with defaults and merge with role-specific overrides
         role_config = llm_config.defaults
+
+        # Check for exact role match first
         if role in llm_config.overrides:
             role_config = role_config.merge(llm_config.overrides[role])
+        else:
+            # Check for dotted role variants (e.g., solver.reasoning)
+            for override_role, override_config in llm_config.overrides.items():
+                if override_role.startswith(f"{role}."):
+                    role_config = role_config.merge(override_config)
+                    break
 
         # Get actual model name from variant
         model_name = profile.models.get_model(role_config.model_variant)

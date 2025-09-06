@@ -1,4 +1,5 @@
 {
+  "schema_version": 1,
   "type": "mcp_eval",
   "description": "MCP evaluation scenarios for Kusto/Microsoft Fabric RTI queries",
   "logging": {
@@ -32,11 +33,20 @@
       }
     }
   },
-  "data": [
+  "evals": [
     {
       "id": "count_rows",
       "question": "How many rows are in my weather events table in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
-      "asker_turns": 1,
+      "execution": {
+        "mcp_calls": [
+          {
+            "mcp": "microsoft-fabric-rti-mcp",
+            "args": {
+              "query": "StormEvents | count"
+            }
+          }
+        ]
+      },
       "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
@@ -73,7 +83,16 @@
     {
       "id": "trips_per_vendor",
       "question": "What is the number of trips per vendor, for the year 2011 in the NYC Taxi dataset (Trips table) in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
-      "asker_turns": 1,
+      "execution": {
+        "mcp_calls": [
+          {
+            "mcp": "microsoft-fabric-rti-mcp",
+            "args": {
+              "query": "StormEvents | count"
+            }
+          }
+        ]
+      },
       "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
@@ -116,7 +135,16 @@
     {
       "id": "trips_avg_cmt",
       "question": "What is the average number of trips for the vendor 'CMT', for the years 2011 to 2015 in the NYC Taxi dataset (Trips table) in Samples database, in the Samples database (https://help.kusto.windows.net/)?",
-      "asker_turns": 1,
+      "execution": {
+        "mcp_calls": [
+          {
+            "mcp": "microsoft-fabric-rti-mcp",
+            "args": {
+              "query": "StormEvents | count"
+            }
+          }
+        ]
+      },
       "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
@@ -153,7 +181,16 @@
     {
       "id": "storm_most_damaging_event_2007",
       "question": "What state suffered the most people effected directly (dead or injured) from a single damaging storm event in the StormEvents table in Samples database, in the Samples database (https://help.kusto.windows.net/)? How many people were effected directly?",
-      "asker_turns": 1,
+      "execution": {
+        "mcp_calls": [
+          {
+            "mcp": "microsoft-fabric-rti-mcp",
+            "args": {
+              "query": "StormEvents | count"
+            }
+          }
+        ]
+      },
       "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
@@ -192,7 +229,16 @@
     {
       "id": "storm_most_damaging_event_2007_vague",
       "question": "What state suffered had the most people effected directly from a single damaging storm event in the StormEvents table in Samples database, in the Samples database (https://help.kusto.windows.net/)? How many people were effected directly?",
-      "asker_turns": 1,
+      "execution": {
+        "mcp_calls": [
+          {
+            "mcp": "microsoft-fabric-rti-mcp",
+            "args": {
+              "query": "StormEvents | count"
+            }
+          }
+        ]
+      },
       "mcps": [
         "microsoft-fabric-rti-mcp"
       ],
@@ -231,7 +277,16 @@
     {
       "id": "storms_cali",
       "question": "What was the most common weather event in California, based on the StormEvents table in Samples database, in the Samples database (https://help.kusto.windows.net/)? How many people were effected directly?",
-      "asker_turns": 1,
+      "execution": {
+        "mcp_calls": [
+          {
+            "mcp": "microsoft-fabric-rti-mcp",
+            "args": {
+              "query": "StormEvents | count"
+            }
+          }
+        ]
+      },
       "mcps": [
         "microsoft-fabric-rti-mcp"
       ],

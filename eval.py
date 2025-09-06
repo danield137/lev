@@ -8,37 +8,44 @@ from termcolor import colored
 
 load_dotenv()
 
-from lev.dataset_loader import load_eval_with_mcps
+from lev.loader import load_manifest
 from lev.runner import run_evals
 
-EVAL_FILES_EXTENSION = ".evl"
+EVAL_MANIFEST_FILES_EXTENSION = ".evl"
 
 
-async def run_mcp_evaluations(dataset_file: str, limit: Optional[int] = None):
-    eval_files: list[str] = []
-    
-    if not dataset_file:
+async def run_mcp_evaluations(manifest_file: str, limit: Optional[int] = None):
+    manifest_files: list[str] = []
+
+    if not manifest_file:
         # load all local files
-        eval_files = [str(p) for p in Path(".").glob(f"*{EVAL_FILES_EXTENSION}")]
-        print(f"Found {len(eval_files)} evaluation files in the current directory")
+        manifest_files = [str(p) for p in Path(".").glob(f"*{EVAL_MANIFEST_FILES_EXTENSION}")]
+        print(f"Found {len(manifest_files)} evaluation files in the current directory")
     else:
         # assume file is json, so if no extension is provided, add .json
-        if not dataset_file.endswith(".evl"):
-            dataset_file += ".evl"
+        if not manifest_file.endswith(".evl"):
+            manifest_file += ".evl"
 
-        dataset_path = Path(dataset_file)
+        dataset_path = Path(manifest_file)
         if not dataset_path.exists():
-            print(f"Error: Dataset file '{dataset_file}' not found")
+            print(f"Error: Manifest file '{manifest_file}' not found")
             exit(1)
 
-        eval_files.append(dataset_file)
+        manifest_files.append(manifest_file)
 
-    for eval_file in eval_files:
+    for eval_file in manifest_files:
         print(f"Loading dataset from {colored(eval_file, 'yellow')}")
-        resolved = load_eval_with_mcps(eval_file)
+        resolved = load_manifest(eval_file)
 
         # Run evaluations using shared infrastructure
-        await run_evals(resolved.name, resolved.evals, resolved.provider_registry, resolved.mcp_registry, limit=limit, result_sink=resolved.result_sink)
+        await run_evals(
+            resolved.name,
+            resolved.evals,
+            resolved.provider_registry,
+            resolved.mcp_registry,
+            limit=limit,
+            result_sink=resolved.result_sink,
+        )
 
 
 async def main():

@@ -166,9 +166,9 @@ class AzureOpenAIProvider(BaseLlmProvider):
         cache_options = TokenCachePersistenceOptions(
             name=cache_name,
             allow_unencrypted_storage=allow_unencrypted_storage,
-        )
+        )  # type: ignore
 
-        credential = InteractiveBrowserCredential(cache_persistence_options=cache_options)
+        credential = InteractiveBrowserCredential(cache_persistence_options=cache_options)  # type: ignore
 
         logger.info("Getting token from Azure credential...")
         token = credential.get_token("https://cognitiveservices.azure.com/.default")
@@ -202,7 +202,7 @@ class AzureOpenAIProvider(BaseLlmProvider):
         return self._cached_token["access_token"]
 
     @property
-    def model(self) -> str:
+    def model(self) -> str | None:
         """Current default model name."""
         return self.default_model
 

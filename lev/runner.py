@@ -1,32 +1,27 @@
-from typing import Any
-
 from termcolor import colored
 
 from lev.conversation import converse
 from lev.core.chat_history import ChatHistory
+from lev.core.config import Eval, ModelConfig
 from lev.core.mcp import McpClientRegistry
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.core.results import McpEvaluationResult
-from lev.dataset_loader import ModelConfig, validate_mcp_usage
+from lev.core.results import McpEvaluationResult, ResultSink
 from lev.judge import EvaluationMode, Judge
 from lev.llm_providers.provider_factory import create_provider
-from lev.output import ResultSink
 from lev.reporting import print_suite_result, print_summary
 
 
 def print_header(
     dataset_name: str,
-    suites: list[dict[str, Any]],
+    evals: list[Eval],
     mcp_registry: McpClientRegistry,
     provider_registry: LlmProviderRegistry,
 ) -> None:
     print("🧪 MCP Evaluation Suite")
-    print(f"Dataset: {colored(dataset_name, 'magenta')} ({len(suites)} suites)")
+    print(f"Manifest: {colored(dataset_name, 'magenta')} ({len(evals)} evals)")
     print(
         f"MCP Servers: [{', '.join(colored(name, 'magenta') for name in mcp_registry.list_servers()) or colored('None', 'red')}]"
     )
-    print(f"Available Roles: [{', '.join(colored(role, 'magenta') for role in provider_registry.roles())}]")
-
     # Display active provider information
     providers_info = provider_registry.get_active_providers_info()
     print("Active Providers:")
@@ -50,9 +45,28 @@ def create_judge(model_config: ModelConfig | None = None) -> Judge:
     return Judge(judge_provider)
 
 
+def validate_mcp_usage(eval: Eval, mcps: list[str]) -> bool:
+    """
+    Validate that only allowed MCPs were used in an evaluation.
+
+    Args:
+        eval: The evaluation instance
+        mcps: List of MCP server names that were actually used
+
+    Returns:
+        True if all used MCPs are allowed, False otherwise
+    """
+    allowed = set(eval.execution.mcps)
+    used = set(mcps)
+
+    # Check if any disallowed MCPs were used
+    disallowed_usage = used - allowed
+    return len(disallowed_usage) == 0
+
+
 async def run_evals(
     dataset_name: str,
-    suites: list[dict[str, Any]],
+    evals: list[Eval],
     provider_registry: LlmProviderRegistry,
     mcp_registry: McpClientRegistry,
     limit: int | None = None,
@@ -60,35 +74,34 @@ async def run_evals(
 ) -> list[McpEvaluationResult]:
     # Apply limit if specified
     if limit is not None and limit > 0:
-        suites = suites[:limit]
+        evals = evals[:limit]
 
-    print_header(dataset_name, suites, mcp_registry, provider_registry)
+    print_header(dataset_name, evals, mcp_registry, provider_registry)
 
     # Create judge from provider registry
     judge = Judge(provider_registry.get_judge())
 
     results = []
     display_names = []
-    for i, suite in enumerate(suites, 1):
-        suite_id = suite["id"]
-        question = suite["question"]
-        suite_mcps = suite["mcps"]
+    for i, eval in enumerate(evals, 1):
+        eval_id = eval.id
+        question = eval.question
+        mcps = eval.execution.mcps
         tool_calls_sequence = []
 
         # Create display name with tags
-        tags = suite.get("tags", [])
-        display_id = f"{suite_id} [{', '.join(tags)}]" if tags else suite_id
+        display_id = f"{eval_id}"
         display_names.append(display_id)
 
         try:
             # Run conversation simulation
-            conversation_result = await converse(suite, mcp_registry, provider_registry)
+            conversation_result = await converse(eval, mcp_registry, provider_registry)
 
             if not conversation_result.success:
                 print(f"❌ Error in suite {display_id}: {conversation_result.error}")
                 results.append(
                     McpEvaluationResult(
-                        suite_id=suite_id,
+                        eval_id=eval_id,
                         question=question,
                         score=0.0,
                         reasoning=conversation_result.error or "Unknown error",
@@ -98,7 +111,7 @@ async def run_evals(
                         tool_calls_sequence=[],
                     )
                 )
-                print_suite_result(results[-1], i, len(suites), display_id)
+                print_suite_result(results[-1], i, len(evals), display_id)
                 continue
 
             conversation = conversation_result.conversation
@@ -122,7 +135,7 @@ async def run_evals(
                     tool_calls_sequence.append({"type": "response", "content": msg.get("content", "")})
 
             # Validate MCP usage
-            mcp_valid = validate_mcp_usage(suite, mcps)
+            mcp_valid = validate_mcp_usage(eval, mcps)
 
             # Judge the conversation using scoring configuration
             if len(conversation) >= 2:
@@ -132,7 +145,7 @@ async def run_evals(
                         conversation_trace = solver_agent.chat_history.render_trace()
 
                     # Handle scoring configuration from suite
-                    scoring_config = suite.get("scoring", ["critique"])
+                    scoring_config = eval.scoring or ["critique"]
                     scores = []
                     all_reasoning = []
 
@@ -231,7 +244,7 @@ async def run_evals(
 
             results.append(
                 McpEvaluationResult(
-                    suite_id=suite_id,
+                    eval_id=eval_id,
                     question=question,
                     score=score,
                     reasoning=reasoning,
@@ -243,13 +256,13 @@ async def run_evals(
                     individual_scores=individual_scores if "individual_scores" in locals() else {},  # type: ignore
                 )
             )
-            print_suite_result(results[-1], i, len(suites), display_id)
+            print_suite_result(results[-1], i, len(evals), display_id)
 
         except Exception as e:
             print(f"❌ Error in suite {display_id}: {e}")
             results.append(
                 McpEvaluationResult(
-                    suite_id=suite_id,
+                    eval_id=eval_id,
                     question=question,
                     score=0.0,
                     reasoning=str(e),
@@ -260,7 +273,7 @@ async def run_evals(
                     conversation_trace="",
                 )
             )
-            print_suite_result(results[-1], i, len(suites), display_id)
+            print_suite_result(results[-1], i, len(evals), display_id)
 
     # Print final summary
     print_summary(results, final=True, display_names=display_names)

@@ -1,7 +1,3 @@
-"""
-Factory for creating LLM providers based on configuration.
-"""
-
 import os
 from typing import Any
 

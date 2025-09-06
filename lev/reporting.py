@@ -25,7 +25,7 @@ def get_result_icon(score: float) -> str:
 
 def print_suite_result(result: McpEvaluationResult, index: int, total: int, display_name: str | None = None):
     """Prints a formatted result for a single suite."""
-    name = display_name if display_name is not None else result.suite_id
+    name = display_name if display_name is not None else result.eval_id
     print(f"🎯 Eval {index}/{total}: {name}")
     print("-" * 80)
     print(f"Question : {result.question}")
@@ -92,7 +92,7 @@ def print_suite_result(result: McpEvaluationResult, index: int, total: int, disp
                                     content = parsed_response["content"]
                                 elif "error" in parsed_response:
                                     content = f"Error: {parsed_response['error']}"
-                                    max_length = 300 # show more of error messages
+                                    max_length = 300  # show more of error messages
                             elif isinstance(parsed_response, list):
                                 content = ", ".join(map(str, parsed_response))
                     except Exception:
@@ -129,7 +129,7 @@ def print_summary(results: list[McpEvaluationResult], final: bool = False, displ
     print("-------")
     for i, r in enumerate(results):
         icon = get_result_icon(r.score)
-        name = display_names[i] if display_names and i < len(display_names) else r.suite_id
+        name = display_names[i] if display_names and i < len(display_names) else r.eval_id
         if hasattr(r, "individual_scores") and r.individual_scores:
             # Show score breakdown if multiple scoring methods were used
             breakdown_parts = [f"{method}:{score:.2f}" for method, score in r.individual_scores.items()]
