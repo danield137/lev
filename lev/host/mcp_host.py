@@ -1,20 +1,26 @@
 import json
 from typing import Any
 
+from attr import dataclass
+
+from lev.common.roles import MessageRole
 from lev.core.agent import Agent
 from lev.core.llm_provider import LlmProvider, ModelResponse, ToolCall
 from lev.host.mcp_registry import McpClientRegistry
+from lev.prompts.reasoning import REASONING_AGENT_INTROSPECTIVE_TEMPLATE
 
+
+@dataclass(slots=True)
+class McpHostConfig:
+    max_steps: int = 8
 
 class McpHost:
-    """
-    MCP Host that orchestrates agent proposals and tool execution.
-    
-    Stages:
-    1. Propose - agent suggests response or tool calls
-    2. Execute - host executes tools via MCP clients  
-    3. Introspect - optional reasoning about whether to continue
-    """
+    agent: Agent
+    mcp_registry: McpClientRegistry
+    journal: list[dict[str, Any]]
+    config: McpHostConfig
+    introspector: Agent | None
+
 
     def __init__(
         self,
@@ -22,44 +28,57 @@ class McpHost:
         mcp_registry: McpClientRegistry,
         *,
         introspector: Agent | None = None,
-        max_steps: int = 8,
+        config: McpHostConfig | None = None,
     ):
         self.agent = agent
         self.mcp_registry = mcp_registry
         self.introspector = introspector
-        self.max_steps = max_steps
+        self.config = config or McpHostConfig()
         self.journal: list[dict[str, Any]] = []  # audit trail
 
-    async def prompt(self, question: str) -> str:
-        """
-        Main entry point. Orchestrates the full agent + tool loop.
-        """
-        depth = 0
+    async def reset(self) -> None:
+        self.journal = []
         await self.agent.reset()
         await self.agent.initialize()
+
+    async def prompt(self, question: str) -> str:
+        if not self.agent.is_initialized:
+            await self.agent.initialize()
         
+        depth = 0
         # Clear journal for new conversation
-        self.journal = []
-        self._log_journal("start", {"question": question, "max_steps": self.max_steps})
-
-        while depth < self.max_steps:
+        self._log_journal("question", {"question": question})
+        
+        # Send initial question
+        prompt_text = question
+        role = MessageRole.USER
+        model_resp = ModelResponse.empty()
+        while depth < self.config.max_steps:
             depth += 1
-            self._log_journal("step", {"depth": depth})
-
             # ---------- 1. Propose stage ----------
             tools = await self._gather_tool_specs()
-            model_resp = await self.agent.message(question, tools=tools)
+            model_resp = await self.agent.message(prompt_text, tools=tools, role=role)
             
             if not model_resp.tool_calls:
-                # Plain answer - we're done
+                # Plain answer - check if we should continue
                 answer = model_resp.content or "No response generated."
                 self._log_journal("propose", {"type": "answer", "content_length": len(answer)})
                 
                 # Optional introspection gate
-                if await self._introspect("answer"):
+                decision = await self._introspect("answer")
+                if decision["continue"]:
                     self._log_journal("introspect", {"action": "continue"})
-                    continue
+                    # Inject developer message if provided
+                    dev_msg = decision.get("next_prompt") or decision.get("reason")
+                    if dev_msg:
+                        prompt_text = dev_msg
+                        role = MessageRole.DEVELOPER
+                        self._log_journal("introspect_prompt", {"message": dev_msg})
+                        continue  # Continue the loop with developer message
+                else:
+                    self._log_journal("introspect", {"action": "stop", "reason": decision.get("reason")})
                     
+                # Introspector says stop or no next_prompt - return answer
                 self._log_journal("complete", {"final_answer": True})
                 return answer
 
@@ -73,19 +92,23 @@ class McpHost:
             # ---------- 2. Execute stage ----------
             await self._execute_tool_calls(model_resp)
 
-            # ---------- 3. Introspect stage ----------
-            if await self._introspect("tool_execution"):
-                self._log_journal("introspect", {"action": "continue"})
-                continue
-
-            # If introspector says we're done, get final answer
-            break
+            # ---------- 3. Introspect stage ---------- 
+            decision = await self._introspect("tool_execution")
+            if decision["continue"] and decision.get("next_prompt"):
+                # Inject developer message if provided
+                next_prompt = decision.get("next_prompt")
+                if next_prompt:
+                    prompt_text = next_prompt
+                    role = MessageRole.DEVELOPER
+                    self._log_journal("introspect_prompt", {"message": next_prompt})
+                    continue
+            else:
+                self._log_journal("introspect", {"action": "stop", "reason": decision.get("reason")})
+                break
 
         # Max steps reached or introspector decided to stop
-        final_msg = self.agent.chat_history.messages[-1] if self.agent.chat_history.messages else None
-        final_answer = final_msg.get("content", "step budget exceeded") if final_msg else "step budget exceeded"
+        final_answer = model_resp.content or "No final answer generated."
         self._log_journal("complete", {"reason": "max_steps_or_introspector", "final_answer": len(final_answer)})
-        
         return final_answer
 
     async def _gather_tool_specs(self) -> list[dict[str, Any]] | None:
@@ -131,9 +154,10 @@ class McpHost:
         results = []
         for tool_call in model_resp.tool_calls:
             try:
+                server_name = await self.mcp_registry.find_tool_server_name(tool_call.name)
                 result = await self._execute_single_tool(tool_call)
                 results.append({"tool": tool_call.name, "success": result.get("success", True)})
-                
+                self.agent.chat_history.add_tool_call(server_name=server_name, tool_name=tool_call.name, arguments=tool_call.arguments, result=result)
                 # Add tool response to chat history
                 self.agent.chat_history.add_tool_response_message(
                     tool_call.id, json.dumps(result)
@@ -180,74 +204,57 @@ class McpHost:
         self._log_journal("tool_not_found", {"tool": tool_call.name})
         return {"success": False, "error": error_msg}
 
-    async def _introspect(self, stage: str) -> bool:
+    async def _introspect(self, stage: str) -> dict[str, Any]:
         """
         Optional introspection step using introspector agent.
-        Returns True if the host should continue the loop.
+        Returns decision dict with continue, reason, and optional next_prompt.
         """
         if not self.introspector:
             # No introspector - default behavior based on stage
-            if stage == "answer":
-                return False  # Stop on plain answer
-            return False  # Stop after tool execution by default
+            result = {"continue": False, "reason": "no introspector, stopping on answer"}
+            self._log_journal("introspect_decision", {
+                "stage": stage,
+                "continue": False,
+                "reason": result["reason"],
+                "next_prompt": None
+            })
+            return result
 
         try:
             # Get conversation history for introspection
-            history_summary = self._summarize_history()
-            
-            prompt = f"""
-            Analyze this conversation and decide the next action.
-            
-            Stage: {stage}
-            
-            Conversation summary:
-            {history_summary}
-            
-            Should the host continue the conversation loop?
-            Respond with JSON: {{"continue": true/false, "reason": "explanation"}}
-            """
-            
-            introspect_resp = await self.introspector.message(prompt, track=False)
-            
+            history_summary = self.agent.chat_history.render_trace()
+            await self.introspector.reset() # kind of a hack. we need the system prompt, but not the conversation at this point
+            introspect_resp = await self.introspector.message(history_summary) # run session-less, so we don't mistakenly include other messages
+
             try:
                 decision = json.loads(introspect_resp.content or "{}")
                 should_continue = decision.get("continue", False)
                 reason = decision.get("reason", "no reason provided")
+                next_prompt = decision.get("next_prompt")
+
+                result = {
+                    "continue": should_continue,
+                    "reason": reason,
+                    "next_prompt": next_prompt
+                }
                 
                 self._log_journal("introspect_decision", {
                     "stage": stage,
                     "continue": should_continue,
-                    "reason": reason
+                    "reason": reason,
+                    "next_prompt": next_prompt
                 })
                 
-                return should_continue
+                return result
                 
             except json.JSONDecodeError:
                 # Fallback if introspector doesn't return valid JSON
                 self._log_journal("introspect_error", {"stage": stage, "error": "invalid_json"})
-                return False
+                return {"continue": False, "reason": "introspector returned invalid JSON"}
                 
         except Exception as e:
             self._log_journal("introspect_error", {"stage": stage, "error": str(e)})
-            return False
-
-    def _summarize_history(self) -> str:
-        """
-        Create a summary of the conversation history for introspection.
-        """
-        messages = self.agent.chat_history.messages
-        if not messages:
-            return "No conversation history"
-        
-        summary_parts = []
-        for msg in messages[-5:]:  # Last 5 messages for context
-            role = msg.get("role", "unknown")
-            content = msg.get("content", "")
-            if len(content) > 200:
-                content = content[:200] + "..."
-            summary_parts.append(f"{role}: {content}")
-        
-        return "\n".join(summary_parts)
+            return {"continue": False, "reason": f"introspection failed: {str(e)}"}
 
     def _to_openai_tool_calls(self, tool_calls: list[ToolCall]) -> list[dict[str, Any]]:
         """

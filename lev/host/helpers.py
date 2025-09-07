@@ -1,11 +1,9 @@
-
 import csv
 import datetime
 import io
 import json
 import logging
 from typing import Any
-
 
 _mcp_logger = logging.getLogger("telemetry.mcp.calls")
 
@@ -38,4 +36,3 @@ def log_mcp_call(server_name: str, tool_name: str, arguments: dict[str, Any], re
                 ]
             )
         )
-

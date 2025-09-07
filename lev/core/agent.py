@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+from lev.common.roles import MessageRole
 from lev.core.chat_history import ChatHistory
 from lev.core.llm_provider import LlmProvider, ModelResponse
 
@@ -26,6 +27,12 @@ class Agent(ABC):
         self.max_tokens = max_tokens
         self.temperature = temperature
 
+    @property
+    @abstractmethod
+    def is_initialized(self) -> bool:
+        """Check if the agent is initialized."""
+        ...
+
     async def initialize(self) -> None:
         """Initialize the agent by connecting to MCP servers."""
         ...
@@ -35,8 +42,14 @@ class Agent(ABC):
         ...
 
     @abstractmethod
-    async def message(self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True) -> ModelResponse:
-        """Process a user message and return a response."""
+    async def message(
+        self,
+        message: str,
+        tools: list[dict[str, Any]] | None = None,
+        session: bool = True,
+        role: MessageRole = MessageRole.USER,
+    ) -> ModelResponse:
+        """Process a message and return a response."""
         ...
 
     async def reset(self) -> None:
@@ -46,11 +59,24 @@ class Agent(ABC):
 
 
 class SimpleAgent(Agent):
-    async def message(self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True) -> ModelResponse:
-        if track:
-            self.chat_history.add_user_message(user_message)
-        messages = [{"role": m.role, "content": m.content} for m in self.chat_history.get_conversation(with_system=True)]  # type: ignore
-        response = await self.llm_provider.chat_complete(messages, tools=tools)
-        if response and response.content and track:
+    @property
+    def is_initialized(self) -> bool:
+        return True
+
+    async def message(
+        self,
+        message: str,
+        tools: list[dict[str, Any]] | None = None,
+        session: bool = True,
+        role: MessageRole = MessageRole.USER,
+    ) -> ModelResponse:
+        self.chat_history.add_message(message, role)
+        messages = []
+        if session:
+            messages = [{"role": m.role, "content": m.content} for m in self.chat_history.get_conversation(with_system=True)]  # type: ignore
+        else:
+            messages = [{"role": role.value, "content": message}]  # type: ignore
+        response = await self.llm_provider.chat_complete(messages)
+        if response and response.content and session:
             self.chat_history.add_assistant_message(response.content)
         return response

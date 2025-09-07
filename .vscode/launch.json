@@ -11,6 +11,14 @@
             "program": "eval.py",
             "console": "integratedTerminal",
             //"args": "${command:pickArgs}"
+        },
+        {
+            "name": "Debug eval2.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "eval2.py",
+            "console": "integratedTerminal",
+            //"args": "${command:pickArgs}"
         }
     ]
 }

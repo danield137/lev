@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
+from lev.common.roles import MessageRole
+
 
 @dataclass(slots=True)
 class ParticipantMessage:
@@ -25,17 +27,26 @@ class ChatHistory:
     def __iter__(self):
         return iter(self.messages)
 
+    def add_message(self, content: str, role: MessageRole | str):
+        """Add a message to history."""
+        role_str = role.value if isinstance(role, MessageRole) else role
+        self.messages.append({"role": role_str, "content": content, "timestamp": datetime.now().isoformat()})
+
     def add_system_message(self, content: str):
         """Add a system message to history."""
-        self.messages.append({"role": "system", "content": content, "timestamp": datetime.now().isoformat()})
+        self.add_message(content, "system")
 
     def add_user_message(self, content: str):
         """Add a user message to history."""
-        self.messages.append({"role": "user", "content": content, "timestamp": datetime.now().isoformat()})
+        self.add_message(content, "user")
 
     def add_assistant_message(self, content: str):
         """Add an assistant message to history."""
-        self.messages.append({"role": "assistant", "content": content, "timestamp": datetime.now().isoformat()})
+        self.add_message(content, "assistant")
+
+    def add_developer_message(self, content: str):
+        """Add a developer message to history."""
+        self.add_message(content, "developer")
 
     def add_assistant_tool_call_message(self, content: str, tool_calls: list[Any]):
         """Add an assistant message with tool calls to history."""
@@ -241,8 +252,11 @@ class ChatHistory:
             elif role == "tool":
                 # Tool response preview under assistant block
                 preview = self._to_str(msg.get("content", "") or "")
-                if len(preview) > max_preview_len:
-                    trimmed = preview[:max_preview_len]
+                max_len = max_preview_len
+                if  'error' in preview.lower():
+                    max_len = 3 * max_len
+                if len(preview) > max_len:
+                    trimmed = preview[:max_len]
                     preview = trimmed + f"... ({len(preview.split())-len(trimmed.split())} tokens excluded)"
                 lines.append(f"{cont}← {preview}")
                 # remain in assistant block

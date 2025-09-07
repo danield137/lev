@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from lev.host.mcp_client import McpClient, McpServerConfig
 
 
@@ -23,6 +24,14 @@ class McpClientRegistry:
     def get_all_clients(self) -> list[McpClient]:
         """Get all registered MCP clients."""
         return list(self._servers.values())
+
+    async def find_tool_server_name(self, tool_name: str) -> str:
+        """Get the MCP client that supports a specific tool."""
+        for client in self.get_all_clients():
+            for tool in await client.list_tools():
+                if tool == tool_name:
+                    return client.server_name
+        return "Unknown"
 
     @classmethod
     def from_dict(cls, mcp_servers: dict[str, dict]) -> McpClientRegistry:

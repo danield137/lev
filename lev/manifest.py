@@ -3,10 +3,11 @@ from enum import Enum
 from typing import Any
 
 from lev.config import Eval
-from lev.host.mcp import McpClientRegistry, McpServerConfig
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.results import ResultSink
+from lev.host.mcp_client import McpServerConfig
+from lev.host.mcp_registry import McpClientRegistry
 from lev.llm_config_loader import LLMConfig
+from lev.results import ResultSink
 
 
 @dataclass(slots=True)

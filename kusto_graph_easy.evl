@@ -7,7 +7,7 @@
     "results": true
   },
   "llm_config": {
-    "active_profile": "azure_openai",
+    "active_profile": "lmstudio",
     "overrides": {
       "solver": {
         "persona": "concise_solver"
@@ -26,12 +26,13 @@
       "command": "uvx",
       "args": [
         "--no-cache",
-        "c:/users/ddubovski/Source/repos/fabric-rti-mcp"
+        "microsoft-fabric-rti-mcp"
       ],
       "env": {
         "KUSTO_DEFAULT_SERVICE_URI": "https://help.kusto.windows.net",
         "KUSTO_DEFAULT_DATABASE": "Samples"
-      }
+      },
+      "suppress_output" :true
     }
   },
   "evals": [

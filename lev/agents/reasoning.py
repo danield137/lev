@@ -56,7 +56,9 @@ class ReasoningAgent(ToolsAgent):
         self.max_validation_attempts = max_validation_attempts
         self.inner_provider = inner_provider or llm_provider
 
-    async def message(self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True) -> ModelResponse:
+    async def message(
+        self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True
+    ) -> ModelResponse:
         """
         Orchestrates reasoning with introspection gates:
           1) Get initial response (with or without tools)
@@ -66,12 +68,12 @@ class ReasoningAgent(ToolsAgent):
         """
         if track:
             self.chat_history.add_user_message(user_message)
-        
+
         try:
             # Use provided tools or get tool specs from connected clients
             if tools is None:
                 tools = await self._get_tool_specs()
-            
+
             step_count = 0
 
             # Get initial response
@@ -88,13 +90,13 @@ class ReasoningAgent(ToolsAgent):
             # For now, return the response directly - introspection will be handled by McpHost
             if track and response.content:
                 self.chat_history.add_assistant_message(response.content)
-            
+
             return response
 
         except Exception as e:
             error_response = ModelResponse(content=f"Error: {e}")
             if track:
-                self.chat_history.add_assistant_message(error_response.content)
+                self.chat_history.add_assistant_message(error_response.content or "Unknown error occurred")
             return error_response
 
     # ============= Planning helpers (explicit names) =============

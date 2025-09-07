@@ -4,6 +4,8 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from mcp import Tool
+
 from lev.host.helpers import log_mcp_call
 
 try:
@@ -14,6 +16,7 @@ except ImportError:
     raise
 
 # Logger for MCP call tracing
+
 
 @dataclass(slots=True)
 class McpServerConfig:
@@ -202,5 +205,3 @@ class McpClient:
     async def is_connected(self) -> bool:
         """Check if the MCP server is connected."""
         return self._connected
-
-
