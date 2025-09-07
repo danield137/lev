@@ -51,16 +51,16 @@ class ToolsAgent(Agent):
         session: bool = True,
         role: MessageRole = MessageRole.USER,
     ) -> ModelResponse:
-        self.chat_history.add_user_message(message)
+        self.chat_history.add_message(message, role=role)
 
         # Use provided tools or get tool specs from connected clients
         if tools is None:
             tools = await self._get_tool_specs()
 
         # Get messages for the LLM
-        messages = self.chat_history.to_role_content_messages(with_system=True)
+        messages = self.chat_history.to_role_content_messages(with_system=True, with_tools=True)
         if not session:
-            messages = [{'role': role.value, 'content': message}]
+            messages = [{"role": role.value, "content": message}]
         # Call the LLM with tools - return raw ModelResponse
         return await self.llm_provider.chat_complete(messages, tools=tools)
 

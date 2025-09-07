@@ -244,16 +244,16 @@ class ChatHistory:
                         lines.append(f"ASSISTANT 💬 {text}")
                     assistant_prefix_active = False
 
-            # elif role == "developer":
-            #     content = self._to_str(msg.get("content", "") or "")
-            #     lines.append(f"{cont}· {content}")
-            #     # keep assistant_prefix_active unchanged
+            elif role == "developer":
+                content = self._to_str(msg.get("content", "") or "")
+                lines.append(f"{cont}🧠 {content}")
+                # keep assistant_prefix_active unchanged
 
             elif role == "tool":
                 # Tool response preview under assistant block
                 preview = self._to_str(msg.get("content", "") or "")
                 max_len = max_preview_len
-                if  'error' in preview.lower():
+                if "error" in preview.lower():
                     max_len = 3 * max_len
                 if len(preview) > max_len:
                     trimmed = preview[:max_len]

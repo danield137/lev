@@ -56,7 +56,11 @@ class McpClient:
             env["MCP_SUPPRESS_OUTPUT"] = "1"
 
         # Create server parameters with modified environment
-        server_params = StdioServerParameters(command=self.config.command, args=self.config.args, env=env)
+        server_params = StdioServerParameters(
+            command=self.config.command,
+            args=self.config.args,
+            env=env,
+        )
 
         try:
             self.stdio_context = stdio_client(server_params)

@@ -9,6 +9,7 @@ from lev.host.mcp_host import McpHost
 from lev.host.mcp_registry import McpClientRegistry
 from lev.prompts.introspection import INTROSPECTIVE_AGENT_SYSTEM_PROMPT
 
+
 def print_header(
     dataset_name: str,
     evals: list[Eval],
@@ -31,6 +32,7 @@ def print_header(
     print("=" * 80)
     print()
 
+
 async def run_host_evals(
     dataset_name: str,
     evals: list[Eval],
@@ -51,19 +53,15 @@ async def run_host_evals(
     introspector = create_agent_from_provider(evals[0], provider_registry.get_solver())
     introspector.system_prompt = INTROSPECTIVE_AGENT_SYSTEM_PROMPT
     # Create McpHost with solver agent and MCP registry
-    host = McpHost(
-        agent=solver_agent,
-        mcp_registry=mcp_registry,
-        introspector=introspector
-    )
+    host = McpHost(agent=solver_agent, mcp_registry=mcp_registry, introspector=introspector)
 
     results = []
-    
+
     try:
         for i, eval_item in enumerate(evals, 1):
             eval_id = eval_item.id
             question = eval_item.question
-            
+
             print(f"\n[{i}/{len(evals)}] Eval: {colored(eval_id, 'cyan')}")
             print(f"Question: {question}")
             print("-" * 40)
@@ -71,18 +69,17 @@ async def run_host_evals(
             try:
                 # Reset host for each new evaluation
                 await host.reset()
-                
+
                 # Get answer from host
                 answer = await host.prompt(question)
-                
+
                 print(f"Answer: {answer}")
-                print(f"Journal entries: {len(host.journal)}")
-                
+            
                 # TODO: Add evaluation logic here
                 # evaluator = Evaluator(..)
                 # score = evaluator.score(answer, eval_item.expected, eval_item.scoring)
                 # print(f"Score: {score}")
-                
+
                 # Store result
                 result = {
                     "eval_id": eval_id,
@@ -92,7 +89,7 @@ async def run_host_evals(
                     "success": True,
                     # "score": score,  # TODO: Add when evaluator is implemented
                 }
-                
+
             except Exception as e:
                 print(f"❌ Error in eval {eval_id}: {e}")
                 result = {
@@ -105,7 +102,7 @@ async def run_host_evals(
                 }
 
             results.append(result)
-            
+
             # TODO: Add summary update here
             # summary.add(eval_item, result["answer"], result.get("score", 0.0))
             print("-" * 40)

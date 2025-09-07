@@ -264,7 +264,7 @@ class LLMConfigLoader:
 
     def get_llm_config(self, llm_config: LLMConfig, role: str) -> ResolvedLLMConfig:
         # Get active profile name (can be overridden by environment)
-        profile_name = os.getenv("EVAL_PROVIDER_PROFILE", llm_config.active_profile)
+        profile_name = os.getenv("LLM_PROVIDER_ACTIVE_PROFILE", llm_config.active_profile)
 
         if profile_name not in self.profiles:
             available = ", ".join(self.profiles.keys())

@@ -7,7 +7,6 @@
     "results": true
   },
   "llm_config": {
-    "active_profile": "lmstudio",
     "overrides": {
       "solver": {
         "persona": "concise_solver"
@@ -26,13 +25,18 @@
       "command": "uvx",
       "args": [
         "--no-cache",
-        "microsoft-fabric-rti-mcp"
+        "/Users/danieldror/Source/repos/fabric-rti-mcp/"
       ],
       "env": {
         "KUSTO_DEFAULT_SERVICE_URI": "https://help.kusto.windows.net",
-        "KUSTO_DEFAULT_DATABASE": "Samples"
+        "KUSTO_DEFAULT_DATABASE": "Samples",
+        "FASTMCP_LOG_LEVEL": "CRITICAL",
+        "FABRIC_RTI_SILENT": "true",
+        "AZURE_HTTP_LOGGING_ENABLED": "false",
+        "AZURE_LOG_LEVEL": "CRITICAL",
+        "PYTHONWARNINGS": "ignore"
       },
-      "suppress_output" :true
+      "suppress_output": true
     }
   },
   "evals": [
