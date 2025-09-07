@@ -7,7 +7,7 @@ from lev.common.roles import MessageRole
 from lev.core.agent import Agent
 from lev.core.llm_provider import LlmProvider, ModelResponse, ToolCall
 from lev.host.mcp_registry import McpClientRegistry
-from lev.prompts.reasoning import REASONING_AGENT_INTROSPECTIVE_TEMPLATE
+from lev.prompts.reasoning import REASONING_AGENT_INTROSPECTIVE_TEMPLATE, REASONING_AGENT_ANSWER_VALIDATION_PROMPT
 
 
 @dataclass(slots=True)
@@ -61,24 +61,20 @@ class McpHost:
                 # Plain answer - check if we should continue
                 answer = model_resp.content or "No response generated."
 
-                # Optional introspection gate
-                decision = await self._introspect("answer")
+                # Make sure the answer is complete
+                decision = await self._introspect(maybe_done=True)
                 if decision["continue"]:
-
+                    role = MessageRole.DEVELOPER
                     # Inject developer message if provided
-                    dev_msg = decision.get("next_prompt") or decision.get("reason")
-                    if dev_msg:
-                        prompt_text = dev_msg
-                        role = MessageRole.DEVELOPER
-
-                        continue  # Continue the loop with developer message
+                    prompt_text = decision.get("next_prompt") or decision.get("reason")
+                    continue  # Continue the loop with developer message
                 return answer
 
             # ---------- 2. Execute stage ----------
             await self._execute_tool_calls(model_resp)
 
             # ---------- 3. Introspect stage ----------
-            decision = await self._introspect("tool_execution")
+            decision = await self._introspect()
             prompt_text = "Proceed to provide the final answer."
             role = MessageRole.DEVELOPER
             if decision["continue"]:
@@ -171,41 +167,58 @@ class McpHost:
 
         return {"success": False, "error": error_msg}
 
-    async def _introspect(self, stage: str) -> dict[str, Any]:
+
+    async def _introspect(self, maybe_done: bool = False) -> dict[str, Any]:
         """
         Optional introspection step using introspector agent.
+        If maybe_done=True, uses answer validation prompt. Otherwise uses default introspection.
         Returns decision dict with continue, reason, and optional next_prompt.
         """
         if not self.introspector:
-            # No introspector - default behavior based on stage
-            result = {"continue": False, "reason": "no introspector, stopping on answer"}
+            # No introspector - default behavior
+            result = {"continue": False, "reason": "no introspector, stopping"}
             return result
 
         try:
             # Get conversation history for introspection
             history_summary = self.agent.chat_history.render_trace()
+            
+            if maybe_done:
+                # Use answer validation prompt
+                answer = self.agent.chat_history.messages[-1].get("content", "") if self.agent.chat_history.messages else ""
+                prompt = REASONING_AGENT_ANSWER_VALIDATION_PROMPT.format(
+                    conversation_history=history_summary,
+                    response_to_validate=answer,
+                )
+            else:
+                # Use default introspection
+                prompt = history_summary
+                
             await self.introspector.reset()  # kind of a hack. we need the system prompt, but not the conversation at this point
-            introspect_resp = await self.introspector.message(
-                history_summary
-            )  # run session-less, so we don't mistakenly include other messages
+            introspect_resp = await self.introspector.message(prompt)  # run session-less, so we don't mistakenly include other messages
 
             try:
                 decision = json.loads(introspect_resp.content or "{}")
-                should_continue = decision.get("continue", False)
-                reason = decision.get("reason", "no reason provided")
-                next_prompt = decision.get("next_prompt")
-
-                result = {"continue": should_continue, "reason": reason, "next_prompt": next_prompt}
-
-                return result
+                
+                if maybe_done:
+                    # For answer validation, check if valid
+                    if not decision.get("valid", True):
+                        followup = decision.get("followup_question", "Please provide more details.")
+                        return {"continue": True, "reason": "answer validation failed", "next_prompt": followup}
+                    else:
+                        return {"continue": False, "reason": "answer validation passed"}
+                else:
+                    # Default introspection behavior
+                    should_continue = decision.get("continue", False)
+                    reason = decision.get("reason", "no reason provided")
+                    next_prompt = decision.get("next_prompt")
+                    return {"continue": should_continue, "reason": reason, "next_prompt": next_prompt}
 
             except json.JSONDecodeError:
                 # Fallback if introspector doesn't return valid JSON
-
                 return {"continue": False, "reason": "introspector returned invalid JSON"}
 
         except Exception as e:
-
             return {"continue": False, "reason": f"introspection failed: {str(e)}"}
 
     def _to_openai_tool_calls(self, tool_calls: list[ToolCall]) -> list[dict[str, Any]]:
