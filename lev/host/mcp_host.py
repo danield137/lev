@@ -7,8 +7,13 @@ from lev.common.roles import MessageRole
 from lev.core.agent import Agent
 from lev.core.llm_provider import LlmProvider, ModelResponse, ToolCall
 from lev.host.mcp_registry import McpClientRegistry
-from lev.prompts.reasoning import REASONING_AGENT_INTROSPECTIVE_TEMPLATE, REASONING_AGENT_ANSWER_VALIDATION_PROMPT
 
+
+@dataclass(slots=True)
+class Turn:
+    content: str | None          # assistant text
+    had_tools: bool              # whether tool_calls executed
+    fatal_error: str | None = None
 
 @dataclass(slots=True)
 class McpHostConfig:
@@ -41,59 +46,45 @@ class McpHost:
         await self.agent.reset()
         await self.agent.initialize()
 
-    async def prompt(self, question: str) -> str:
-        if not self.agent.is_initialized:
-            await self.agent.initialize()
+    async def warm_up(self) -> None:
+        """
+        Connect to all MCP clients and warm them up.
+        """
+        clients = self.mcp_registry.get_all_clients()
+        for client in clients:
+            await client.connect()
 
-        depth = 0
+    async def step(self, prompt: str, *, role: MessageRole = MessageRole.USER) -> Turn:
+        """
+        Single round-trip:
+        • send prompt/role to agent
+        • execute any tool calls
+        • return Turn(...)
+        """
+        try:
+            if not self.agent.is_initialized:
+                await self.agent.initialize()
 
-        # Send initial question
-        prompt_text = question
-        role = MessageRole.USER
-        model_resp = ModelResponse.empty()
-        while depth < self.config.max_steps:
-            depth += 1
-            # ---------- 1. Propose stage ----------
+            # Get agent response
             tools = await self._gather_tool_specs()
-            model_resp = await self.agent.message(prompt_text, tools=tools, role=role)
+            model_resp = await self.agent.message(prompt, tools=tools, role=role)
 
             if not model_resp.tool_calls:
-                # Plain answer - check if we should continue
-                answer = model_resp.content or "No response generated."
+                # Plain answer, no tools
+                self.agent.chat_history.add_assistant_message(model_resp.content or "")
+                return Turn(content=model_resp.content, had_tools=False)
 
-                # Make sure the answer is complete
-                decision = await self._introspect(maybe_done=True)
-                if decision["continue"]:
-                    role = MessageRole.DEVELOPER
-                    # Inject developer message if provided
-                    prompt_text = decision.get("next_prompt") or decision.get("reason")
-                    continue  # Continue the loop with developer message
-                return answer
-
-            # ---------- 2. Execute stage ----------
+            # Execute tool calls
             await self._execute_tool_calls(model_resp)
+            return Turn(content=model_resp.content, had_tools=True)
 
-            # ---------- 3. Introspect stage ----------
-            decision = await self._introspect()
-            prompt_text = "Proceed to provide the final answer."
-            role = MessageRole.DEVELOPER
-            if decision["continue"]:
-                # Inject developer message if provided, else request final answer
-                next_prompt = decision.get("next_prompt")
+        except Exception as e:
+            return Turn(content=None, had_tools=False, fatal_error=str(e))
 
-                if next_prompt:
-                    prompt_text = next_prompt
-                    
-                continue
-            else:
-                continue
+    def history(self):
+        """Simple accessor to chat history."""
+        return self.agent.chat_history
 
-        if model_resp.content is None:
-            print(self.agent.chat_history.render_trace())
-        # Max steps reached or introspector decided to stop
-        final_answer = model_resp.content or "No final answer generated."
-
-        return final_answer
 
     async def _gather_tool_specs(self) -> list[dict[str, Any]] | None:
         """
@@ -166,60 +157,6 @@ class McpHost:
         error_msg = f"Tool {tool_call.name} not found in any connected MCP client"
 
         return {"success": False, "error": error_msg}
-
-
-    async def _introspect(self, maybe_done: bool = False) -> dict[str, Any]:
-        """
-        Optional introspection step using introspector agent.
-        If maybe_done=True, uses answer validation prompt. Otherwise uses default introspection.
-        Returns decision dict with continue, reason, and optional next_prompt.
-        """
-        if not self.introspector:
-            # No introspector - default behavior
-            result = {"continue": False, "reason": "no introspector, stopping"}
-            return result
-
-        try:
-            # Get conversation history for introspection
-            history_summary = self.agent.chat_history.render_trace()
-            
-            if maybe_done:
-                # Use answer validation prompt
-                answer = self.agent.chat_history.messages[-1].get("content", "") if self.agent.chat_history.messages else ""
-                prompt = REASONING_AGENT_ANSWER_VALIDATION_PROMPT.format(
-                    conversation_history=history_summary,
-                    response_to_validate=answer,
-                )
-            else:
-                # Use default introspection
-                prompt = history_summary
-                
-            await self.introspector.reset()  # kind of a hack. we need the system prompt, but not the conversation at this point
-            introspect_resp = await self.introspector.message(prompt)  # run session-less, so we don't mistakenly include other messages
-
-            try:
-                decision = json.loads(introspect_resp.content or "{}")
-                
-                if maybe_done:
-                    # For answer validation, check if valid
-                    if not decision.get("valid", True):
-                        followup = decision.get("followup_question", "Please provide more details.")
-                        return {"continue": True, "reason": "answer validation failed", "next_prompt": followup}
-                    else:
-                        return {"continue": False, "reason": "answer validation passed"}
-                else:
-                    # Default introspection behavior
-                    should_continue = decision.get("continue", False)
-                    reason = decision.get("reason", "no reason provided")
-                    next_prompt = decision.get("next_prompt")
-                    return {"continue": should_continue, "reason": reason, "next_prompt": next_prompt}
-
-            except json.JSONDecodeError:
-                # Fallback if introspector doesn't return valid JSON
-                return {"continue": False, "reason": "introspector returned invalid JSON"}
-
-        except Exception as e:
-            return {"continue": False, "reason": f"introspection failed: {str(e)}"}
 
     def _to_openai_tool_calls(self, tool_calls: list[ToolCall]) -> list[dict[str, Any]]:
         """

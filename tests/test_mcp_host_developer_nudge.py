@@ -6,8 +6,9 @@ import pytest
 from lev.common.roles import MessageRole
 from lev.core.agent import Agent
 from lev.core.llm_provider import ModelResponse
-from lev.host.mcp_host import McpHost, McpHostConfig
+from lev.host.mcp_host import McpHost
 from lev.host.mcp_registry import McpClientRegistry
+from lev.controller import Controller, Introspector
 
 
 class MockAgent(Agent):
@@ -68,11 +69,13 @@ async def test_developer_nudge_after_introspection():
     mcp_registry = MagicMock()
     mcp_registry.get_all_clients.return_value = []
 
-    # Create host
-    host = McpHost(agent=agent, mcp_registry=mcp_registry, introspector=introspector, config=McpHostConfig(max_steps=5))
+    # Create host and controller
+    host = McpHost(agent=agent, mcp_registry=mcp_registry)
+    introspector_wrapper = Introspector(introspector)
+    controller = Controller(host, introspector_wrapper, max_steps=5)
 
     # Execute
-    result = await host.prompt("Test question")
+    result = await controller.run("Test question")
 
     # Verify
     assert result == "Final answer with nudge"
@@ -120,11 +123,13 @@ async def test_tool_error_introspection():
     mcp_registry = MagicMock()
     mcp_registry.get_all_clients.return_value = []
 
-    # Create host
-    host = McpHost(agent=agent, mcp_registry=mcp_registry, introspector=introspector, config=McpHostConfig(max_steps=5))
+    # Create host and controller
+    host = McpHost(agent=agent, mcp_registry=mcp_registry)
+    introspector_wrapper = Introspector(introspector)
+    controller = Controller(host, introspector_wrapper, max_steps=5)
 
     # Execute
-    result = await host.prompt("Test question")
+    result = await controller.run("Test question")
 
     # Verify
     assert result == "Final answer after error recovery"
@@ -149,13 +154,12 @@ async def test_no_introspector_fallback():
     mcp_registry = MagicMock()
     mcp_registry.get_all_clients.return_value = []
 
-    # Create host without introspector
-    host = McpHost(
-        agent=agent, mcp_registry=mcp_registry, introspector=None, config=McpHostConfig(max_steps=5)  # No introspector
-    )
+    # Create host and controller without introspector
+    host = McpHost(agent=agent, mcp_registry=mcp_registry)
+    controller = Controller(host, None, max_steps=5)  # No introspector
 
     # Execute
-    result = await host.prompt("Test question")
+    result = await controller.run("Test question")
 
     # Verify
     assert result == "Simple answer"

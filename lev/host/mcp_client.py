@@ -202,6 +202,10 @@ class McpClient:
         if final_result is None:
             final_result = {"success": False, "error": "No response from server"}
 
+        if final_result.get('content', "").lower().startswith("error"):
+            final_result["success"] = False
+            final_result["error"] = final_result.get("content")
+
         log_mcp_call(self.server_name, tool_name, arguments, final_result)
 
         return final_result

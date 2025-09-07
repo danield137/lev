@@ -173,7 +173,7 @@ class ChatHistory:
 
     def render_trace(
         self,
-        max_preview_len: int = 100,
+        max_preview_len: int = 500,
     ) -> str:
         """Render the entire conversation as a console-style trace with back-and-forth turns.
 
@@ -215,7 +215,7 @@ class ChatHistory:
                             if stored_call.get("tool_name") == name:
                                 server_name = stored_call.get("server_name", "unknown")
                                 break
-                        full_name = f"[tool_call:{server_name}.{name}]"
+                        full_name = f"→ [tool_call:{server_name}.{name}]"
 
                         raw_args = func.get("arguments", "") or ""
                         try:
@@ -230,7 +230,7 @@ class ChatHistory:
                         except Exception:
                             args_str = self._to_str(raw_args)
 
-                        prefix = "ASSISTANT → " if not assistant_prefix_active else cont
+                        prefix = "ASSISTANT " if not assistant_prefix_active else cont
                         lines.append(f"{prefix}{full_name}({args_str})")
                         assistant_prefix_active = True
 

@@ -1,12 +1,13 @@
 from termcolor import colored
 
-from lev.agents.factory import create_tool_agent_from_provider, create_agent_from_provider
+from lev.agents.factory import create_tool_agent_from_provider, create_introspector_from_provider
 from lev.config import Eval
 from lev.core import agent
 from lev.core.agent import Agent
 from lev.core.provider_registry import LlmProviderRegistry
 from lev.host.mcp_host import McpHost
 from lev.host.mcp_registry import McpClientRegistry
+from lev.controller import Controller, Introspector
 from lev.prompts.introspection import INTROSPECTIVE_AGENT_SYSTEM_PROMPT
 
 
@@ -49,11 +50,14 @@ async def run_host_evals(
     # Create solver agent from provider registry
     # TODO: fix this later. old runner code recreated the agent for each eval, but with host, we only have one
     solver_agent = create_tool_agent_from_provider(evals[0], provider_registry.get_solver(), mcp_registry)
-    # TODO: hacky way to create an introspector
-    introspector = create_agent_from_provider(evals[0], provider_registry.get_solver())
-    introspector.system_prompt = INTROSPECTIVE_AGENT_SYSTEM_PROMPT
-    # Create McpHost with solver agent and MCP registry
-    host = McpHost(agent=solver_agent, mcp_registry=mcp_registry, introspector=introspector)
+    # Create introspector using factory function
+    introspector = create_introspector_from_provider(evals[0], provider_registry.get_solver())
+
+    # Create McpHost with solver agent and MCP registry (no more introspector param)
+    host = McpHost(agent=solver_agent, mcp_registry=mcp_registry)
+    await host.warm_up()
+    # Create Controller with host and introspector
+    controller = Controller(host, introspector)
 
     results = []
 
@@ -67,14 +71,15 @@ async def run_host_evals(
             print("-" * 40)
 
             try:
-                # Reset host for each new evaluation
-                await host.reset()
-
-                # Get answer from host
-                answer = await host.prompt(question)
+                # Get answer from controller
+                answer = await controller.run(question)
 
                 print(f"Answer: {answer}")
-            
+                print("-" * 20)
+                print("chat_history")
+                print("=" * 20)
+                print(host.agent.chat_history.render_trace())
+                
                 # TODO: Add evaluation logic here
                 # evaluator = Evaluator(..)
                 # score = evaluator.score(answer, eval_item.expected, eval_item.scoring)
