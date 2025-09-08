@@ -1,9 +1,12 @@
 from lev.agents.reasoning import ReasoningAgent
+from lev.agents.tool import ToolsAgent
+from lev.config import Eval
+from lev.workflow import Introspector
 from lev.core.agent import SimpleAgent
-from lev.core.config import Eval
 from lev.core.llm_provider import LlmProvider
-from lev.core.mcp import McpClientRegistry
 from lev.loader import get_persona_system_prompt
+from lev.mcp.mcp_registry import McpClientRegistry
+from lev.prompts.introspection import INTROSPECTIVE_AGENT_SYSTEM_PROMPT
 from lev.prompts.reasoning import REASONING_AGENT_DEFAULT_SYSTEM_PROMPT
 
 
@@ -25,6 +28,18 @@ def create_agent_from_provider(eval: Eval, provider: LlmProvider) -> SimpleAgent
     return SimpleAgent(llm_provider=provider, system_prompt=asker_prompt)
 
 
+def create_tool_agent_from_provider(
+    eval: Eval, provider: LlmProvider, mcp_registry: McpClientRegistry | None = None
+) -> ToolsAgent:
+    """Create a tools agent using a provider directly."""
+    mcp_clients = []
+    if mcp_registry:
+        mcp_clients = create_mcp_clients(eval, mcp_registry)
+    return ToolsAgent(
+        llm_provider=provider, system_prompt=REASONING_AGENT_DEFAULT_SYSTEM_PROMPT, mcp_clients=mcp_clients
+    )
+
+
 def create_reasoning_agent_from_provider(
     eval: Eval, provider: LlmProvider, mcp_registry: McpClientRegistry | None = None
 ) -> ReasoningAgent:
@@ -35,3 +50,10 @@ def create_reasoning_agent_from_provider(
     return ReasoningAgent(
         llm_provider=provider, system_prompt=REASONING_AGENT_DEFAULT_SYSTEM_PROMPT, mcp_clients=mcp_clients
     )
+
+
+def create_introspector_from_provider(eval: Eval, provider: LlmProvider) -> Introspector:
+    """Create an introspector using a provider directly."""
+    introspector_agent = create_agent_from_provider(eval, provider)
+    introspector_agent.system_prompt = INTROSPECTIVE_AGENT_SYSTEM_PROMPT
+    return Introspector(introspector_agent)

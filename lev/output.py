@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from lev.core.chat_history import ChatHistory
-from lev.core.results import McpEvaluationResult
+from lev.results import McpEvaluationResult
 
 
 class TsvResultSink:

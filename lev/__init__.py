@@ -1,7 +1,7 @@
 from lev.core.agent import Agent
 from lev.core.chat_history import ChatHistory
-from lev.core.mcp import McpClient
 from lev.judge import Judge
+from lev.mcp.mcp_client import McpClient
 
 __all__ = ["ChatHistory", "McpClient", "Agent", "Judge"]
 

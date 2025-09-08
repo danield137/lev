@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import csv
-import datetime
-import io
 import json
-import logging
 from dataclasses import dataclass
 from typing import Any
+
+from mcp import Tool
+
+from lev.mcp.helpers import log_mcp_call
 
 try:
     from mcp import ClientSession, StdioServerParameters
@@ -16,37 +16,6 @@ except ImportError:
     raise
 
 # Logger for MCP call tracing
-_mcp_logger = logging.getLogger("telemetry.mcp.calls")
-
-
-def _csv_row(values: list[str]) -> str:
-    """Convert a list of values to a CSV row string."""
-    buf = io.StringIO()
-    csv.writer(buf).writerow(values)
-    return buf.getvalue().strip()
-
-
-def _approx_tokens(text: str) -> int:
-    """Approximate token count using simple word splitting."""
-    return len(text.split())
-
-
-def log_mcp_call(server_name: str, tool_name: str, arguments: dict[str, Any], response: dict[str, Any]):
-    """Log an MCP call for tracing."""
-    if _mcp_logger.isEnabledFor(logging.INFO):
-        resp_text = json.dumps(response, ensure_ascii=False)
-        _mcp_logger.info(
-            _csv_row(
-                [
-                    datetime.datetime.now(tz=datetime.timezone.utc).isoformat(timespec="milliseconds") + "Z",
-                    server_name,
-                    tool_name,
-                    json.dumps(arguments, ensure_ascii=False),
-                    str(_approx_tokens(resp_text)),
-                    str(len(resp_text.encode())),
-                ]
-            )
-        )
 
 
 @dataclass(slots=True)
@@ -87,7 +56,11 @@ class McpClient:
             env["MCP_SUPPRESS_OUTPUT"] = "1"
 
         # Create server parameters with modified environment
-        server_params = StdioServerParameters(command=self.config.command, args=self.config.args, env=env)
+        server_params = StdioServerParameters(
+            command=self.config.command,
+            args=self.config.args,
+            env=env,
+        )
 
         try:
             self.stdio_context = stdio_client(server_params)
@@ -229,6 +202,10 @@ class McpClient:
         if final_result is None:
             final_result = {"success": False, "error": "No response from server"}
 
+        if final_result.get("content", "").lower().startswith("error"):
+            final_result["success"] = False
+            final_result["error"] = final_result.get("content")
+
         log_mcp_call(self.server_name, tool_name, arguments, final_result)
 
         return final_result
@@ -236,46 +213,3 @@ class McpClient:
     async def is_connected(self) -> bool:
         """Check if the MCP server is connected."""
         return self._connected
-
-
-class McpClientRegistry:
-    """Registry for discovering and managing MCP server configurations."""
-
-    def __init__(self):
-        self._servers: dict[str, McpClient] = {}
-
-    def register_server(self, config: McpServerConfig):
-        """Register a server configuration."""
-        self._servers[config.name] = McpClient(config)
-
-    def get_client(self, name: str) -> McpClient | None:
-        """Get a server configuration by name."""
-        return self._servers.get(name)
-
-    def list_servers(self) -> list[str]:
-        """List all registered server names."""
-        return list(self._servers.keys())
-
-    @classmethod
-    def from_dict(cls, mcp_servers: dict[str, dict]) -> McpClientRegistry:
-        """Create a registry from a dictionary of server configurations."""
-        registry = cls()
-        for name, config in mcp_servers.items():
-            server_config = McpServerConfig(
-                name=name,
-                command=config.get("command", ""),
-                args=config.get("args", []),
-                env=config.get("env", {}),
-                suppress_output=config.get("suppress_output", True),  # Default to suppressing output
-            )
-            registry.register_server(server_config)
-        return registry
-
-    @classmethod
-    def from_config(cls, configs: dict[str, McpServerConfig]) -> McpClientRegistry:
-        """Create a registry from a list of server configurations."""
-        registry = cls()
-        for name, config in configs.items():
-            config.name = name
-            registry.register_server(config)
-        return registry

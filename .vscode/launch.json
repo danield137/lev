@@ -11,6 +11,14 @@
             "program": "eval.py",
             "console": "integratedTerminal",
             //"args": "${command:pickArgs}"
+        },
+        {
+            "name": "Debug eval2.py kusto_relational_easy",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "eval2.py",
+            "console": "integratedTerminal",
+            "args": ["kusto_relational_easy"]
         }
     ]
 }

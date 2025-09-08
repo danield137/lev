@@ -79,7 +79,7 @@ class LMStudioProvider(BaseLlmProvider):
             if "tool_call_id" in msg:
                 openai_msg["tool_call_id"] = msg["tool_call_id"]  # type: ignore
 
-            openai_messages.append(openai_msg) # type: ignore
+            openai_messages.append(openai_msg)  # type: ignore
 
         model_name = model or self.default_model
 

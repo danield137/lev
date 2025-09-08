@@ -43,9 +43,15 @@ Review the conversation and the assistant's response. Determine:
 2. Is the response complete and satisfactory?
 3. Are there any gaps or missing information?
 
-If the response is satisfactory, respond with: {{"valid": true, "reason": "Response adequately answers the question"}}
+PAY ATTENTION: The conversation history might contain trimmed messages. 
 
-If the response is insufficient, respond with: {{"valid": false, "reason": "Specific issue with the response", "followup_question": "What specific followup question should be asked?"}}
+* ASSUME THE AGENT SEES THE FULL TEXT, THUS NO NEED TO RE-RUN TOOLS IN THAT CASE.
+* DO NOT GIVE DIRECT ORDERS
+* DO NOT ASK AGENT TO RUN TOOLS
+
+* If the response is satisfactory: respond with: {{"valid": true, "reason": "Response adequately answers the question"}}
+
+* If the response is insufficient: respond with: {{"valid": false, "reason": "Specific issue with the response", "followup_question": "What specific followup question should be asked?"}}
 
 CONVERSATION HISTORY:
 '''

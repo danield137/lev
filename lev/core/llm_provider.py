@@ -1,25 +1,27 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Protocol
 
 
-@dataclass
+@dataclass(slots=True)
 class ToolCall:
-    """Represents a tool call request from the LLM."""
-
     id: str
     name: str
     arguments: dict[str, Any]
 
 
-@dataclass
+@dataclass(slots=True)
 class ModelResponse:
-    """Response from an LLM provider."""
-
     content: str | None
     tool_calls: list[ToolCall] | None = None
     finish_reason: str | None = None
     usage: dict[str, Any] | None = None
+
+    @classmethod
+    def empty(cls) -> ModelResponse:
+        return cls(content=None, tool_calls=[], finish_reason=None, usage=None)
 
 
 class LlmProvider(Protocol):

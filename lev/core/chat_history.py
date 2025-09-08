@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
+from lev.common.roles import MessageRole
+
 
 @dataclass(slots=True)
 class ParticipantMessage:
@@ -25,17 +27,26 @@ class ChatHistory:
     def __iter__(self):
         return iter(self.messages)
 
+    def add_message(self, content: str, role: MessageRole | str):
+        """Add a message to history."""
+        role_str = role.value if isinstance(role, MessageRole) else role
+        self.messages.append({"role": role_str, "content": content, "timestamp": datetime.now().isoformat()})
+
     def add_system_message(self, content: str):
         """Add a system message to history."""
-        self.messages.append({"role": "system", "content": content, "timestamp": datetime.now().isoformat()})
+        self.add_message(content, "system")
 
     def add_user_message(self, content: str):
         """Add a user message to history."""
-        self.messages.append({"role": "user", "content": content, "timestamp": datetime.now().isoformat()})
+        self.add_message(content, "user")
 
     def add_assistant_message(self, content: str):
         """Add an assistant message to history."""
-        self.messages.append({"role": "assistant", "content": content, "timestamp": datetime.now().isoformat()})
+        self.add_message(content, "assistant")
+
+    def add_developer_message(self, content: str):
+        """Add a developer message to history."""
+        self.add_message(content, "developer")
 
     def add_assistant_tool_call_message(self, content: str, tool_calls: list[Any]):
         """Add an assistant message with tool calls to history."""
@@ -84,11 +95,27 @@ class ChatHistory:
 
     def get_user_messages(self) -> list[ParticipantMessage]:
         """Get all user messages from the conversation."""
-        return [ParticipantMessage(**msg) for msg in self.messages if msg.get("role") == "user"]
+        return [
+            ParticipantMessage(
+                role=msg["role"],
+                content=msg["content"],
+                timestamp=msg["timestamp"],
+            )
+            for msg in self.messages
+            if msg.get("role") == "user"
+        ]
 
     def get_assistant_messages(self) -> list[ParticipantMessage]:
         """Get all assistant messages from the conversation."""
-        return [ParticipantMessage(**msg) for msg in self.messages if msg.get("role") == "assistant"]
+        return [
+            ParticipantMessage(
+                role=msg["role"],
+                content=msg["content"],
+                timestamp=msg["timestamp"],
+            )
+            for msg in self.messages
+            if msg.get("role") == "assistant"
+        ]
 
     def to_role_content_messages(self, with_system: bool = False, with_tools: bool = False) -> list[dict[str, Any]]:
         messages = []
@@ -162,7 +189,7 @@ class ChatHistory:
 
     def render_trace(
         self,
-        max_preview_len: int = 100,
+        max_preview_len: int = 500,
     ) -> str:
         """Render the entire conversation as a console-style trace with back-and-forth turns.
 
@@ -204,7 +231,7 @@ class ChatHistory:
                             if stored_call.get("tool_name") == name:
                                 server_name = stored_call.get("server_name", "unknown")
                                 break
-                        full_name = f"[tool_call:{server_name}.{name}]"
+                        full_name = f"→ [tool_call:{server_name}.{name}]"
 
                         raw_args = func.get("arguments", "") or ""
                         try:
@@ -219,7 +246,7 @@ class ChatHistory:
                         except Exception:
                             args_str = self._to_str(raw_args)
 
-                        prefix = "ASSISTANT → " if not assistant_prefix_active else cont
+                        prefix = "ASSISTANT " if not assistant_prefix_active else cont
                         lines.append(f"{prefix}{full_name}({args_str})")
                         assistant_prefix_active = True
 
@@ -233,16 +260,19 @@ class ChatHistory:
                         lines.append(f"ASSISTANT 💬 {text}")
                     assistant_prefix_active = False
 
-            # elif role == "developer":
-            #     content = self._to_str(msg.get("content", "") or "")
-            #     lines.append(f"{cont}· {content}")
-            #     # keep assistant_prefix_active unchanged
+            elif role == "developer":
+                content = self._to_str(msg.get("content", "") or "")
+                lines.append(f"{cont}🧠 {content}")
+                # keep assistant_prefix_active unchanged
 
             elif role == "tool":
                 # Tool response preview under assistant block
                 preview = self._to_str(msg.get("content", "") or "")
-                if len(preview) > max_preview_len:
-                    trimmed = preview[:max_preview_len]
+                max_len = max_preview_len
+                if "error" in preview.lower():
+                    max_len = 3 * max_len
+                if len(preview) > max_len:
+                    trimmed = preview[:max_len]
                     preview = trimmed + f"... ({len(preview.split())-len(trimmed.split())} tokens excluded)"
                 lines.append(f"{cont}← {preview}")
                 # remain in assistant block

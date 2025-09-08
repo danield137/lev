@@ -1,9 +1,9 @@
 from lev.agents.factory import create_agent_from_provider, create_reasoning_agent_from_provider
+from lev.config import Eval
 from lev.core.chat_history import ChatHistory
-from lev.core.config import Eval
-from lev.core.mcp import McpClientRegistry
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.core.results import ConversationResult
+from lev.mcp.mcp_registry import McpClientRegistry
+from lev.results import ConversationResult
 
 
 async def converse(
@@ -31,7 +31,7 @@ async def converse(
         for asker_turn in range(asker_turns):
             # Solver responds (potentially using MCP tools)
             solver_response = await solver.message(current_message)
-            conversation.add_assistant_message(solver_response or "")
+            conversation.add_assistant_message(solver_response.content or "")
 
             # Track MCP usage from connected clients
             for mcp_client in solver.mcp_clients:
@@ -43,7 +43,7 @@ async def converse(
                 break
 
             try:
-                next_question = await asker.message(solver_response or "")
+                next_question = await asker.message(solver_response.content or "")
             except Exception:
                 # If asker generation fails, end the conversation
                 break

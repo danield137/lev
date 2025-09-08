@@ -1,16 +1,18 @@
 import json
 from typing import Any
 
+from lev.common.roles import MessageRole
 from lev.core.agent import Agent
-from lev.core.llm_provider import LlmProvider
-from lev.core.mcp import McpClient
+from lev.core.llm_provider import LlmProvider, ModelResponse
 from lev.llm_providers.provider_factory import create_tool_enabled_provider
+from lev.mcp.mcp_client import McpClient
 from lev.prompts.tool_agent import TOOL_AGENT_DEFAULT_SYSTEM_PROMPT
 
 
 class ToolsAgent(Agent):
     mcp_clients: list[McpClient]
     find_errors_in_content: bool = True
+    _is_initialized: bool = False
 
     def __init__(
         self,
@@ -28,21 +30,39 @@ class ToolsAgent(Agent):
         system_prompt = system_prompt or TOOL_AGENT_DEFAULT_SYSTEM_PROMPT
         super().__init__(llm_provider, system_prompt, temperature=temperature, max_tokens=max_tokens)
 
+    @property
+    def is_initialized(self) -> bool:
+        return self._is_initialized
+
     async def initialize(self) -> None:
         for c in self.mcp_clients:
             await c.connect()
+        self._is_initialized = True
 
     async def cleanup(self) -> None:
         for c in self.mcp_clients:
             await c.disconnect()
+        self._is_initialized = False
 
-    async def message(self, user_message: str, track: bool = True) -> str:
-        if track:
-            self.chat_history.add_user_message(user_message)
-        resp = await self._answer_with_tools()
-        if track:
-            self.chat_history.add_assistant_message(resp)
-        return resp
+    async def message(
+        self,
+        message: str,
+        tools: list[dict[str, Any]] | None = None,
+        session: bool = True,
+        role: MessageRole = MessageRole.USER,
+    ) -> ModelResponse:
+        self.chat_history.add_message(message, role=role)
+
+        # Use provided tools or get tool specs from connected clients
+        if tools is None:
+            tools = await self._get_tool_specs()
+
+        # Get messages for the LLM
+        messages = self.chat_history.to_role_content_messages(with_system=True, with_tools=True)
+        if not session:
+            messages = [{"role": role.value, "content": message}]
+        # Call the LLM with tools - return raw ModelResponse
+        return await self.llm_provider.chat_complete(messages, tools=tools)
 
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         for c in self.mcp_clients:
@@ -78,7 +98,8 @@ class ToolsAgent(Agent):
             )
 
             await self._exec_tool_calls(first.tool_calls)
-            return await self._finalize(tools)
+            resp = await self.prompt_with_existing_messages(tools)
+            return resp.content or "No response generated."
         except Exception as e:
             return f"Error: {e}"
 
@@ -90,9 +111,9 @@ class ToolsAgent(Agent):
                 res = {"success": False, "error": str(e)}
             self.chat_history.add_tool_response_message(tc.id, json.dumps(res))
 
-    async def _finalize(self, tools) -> str:
-        final = await self.llm_provider.chat_complete(messages=self._build_messages(), tools=tools)
-        return final.content or "Processed with tools."
+    async def prompt_with_existing_messages(self, tools) -> ModelResponse:
+        resp = await self.llm_provider.chat_complete(messages=self._build_messages(), tools=tools)
+        return resp
 
     def _build_messages(self) -> list[dict[str, Any]]:
         system = self.system_prompt

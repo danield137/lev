@@ -2,7 +2,7 @@ import json
 
 from termcolor import colored
 
-from lev.core.results import McpEvaluationResult
+from lev.results import McpEvaluationResult
 
 
 def get_result_status(score: float) -> str:

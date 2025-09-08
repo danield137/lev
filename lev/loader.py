@@ -2,14 +2,14 @@ import json
 from pathlib import Path
 
 from lev.common.extensions import from_dict
-from lev.core.mcp import McpClientRegistry
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.core.results import ResultSink
 from lev.llm_config_loader import LLMConfigLoader
 from lev.llm_providers.provider_factory import create_provider
 from lev.logging import configure_telemetry_logging
 from lev.manifest import DatasetType, EvalManifest, ResolvedEvalManifest
+from lev.mcp.mcp_registry import McpClientRegistry
 from lev.output import create_tsv_result_sink
+from lev.results import ResultSink
 
 
 def load_personas(path: str = "personas.json") -> dict[str, dict[str, str]]:
