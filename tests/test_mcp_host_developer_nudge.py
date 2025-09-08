@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from lev.common.roles import MessageRole
+from lev.controller import Controller, Introspector
 from lev.core.agent import Agent
 from lev.core.llm_provider import ModelResponse
-from lev.host.mcp_host import McpHost
-from lev.host.mcp_registry import McpClientRegistry
-from lev.controller import Controller, Introspector
+from lev.mcp.mcp_host import McpHost
+from lev.mcp.mcp_registry import McpClientRegistry
 
 
 class MockAgent(Agent):

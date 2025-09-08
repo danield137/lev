@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 from lev.agents.tool import ToolsAgent
+from lev.common.roles import MessageRole
 from lev.core.chat_history import ChatHistory
 from lev.core.llm_provider import LlmProvider, ModelResponse
 from lev.prompts.reasoning import (
@@ -57,7 +58,11 @@ class ReasoningAgent(ToolsAgent):
         self.inner_provider = inner_provider or llm_provider
 
     async def message(
-        self, user_message: str, tools: list[dict[str, Any]] | None = None, track: bool = True
+        self,
+        message: str,
+        tools: list[dict[str, Any]] | None = None,
+        session: bool = True,
+        role: MessageRole = MessageRole.USER,
     ) -> ModelResponse:
         """
         Orchestrates reasoning with introspection gates:
@@ -66,8 +71,7 @@ class ReasoningAgent(ToolsAgent):
           3) Validate final answer before returning
           4) Ask developer followups if answer is insufficient
         """
-        if track:
-            self.chat_history.add_user_message(user_message)
+        self.chat_history.add_user_message(message)
 
         try:
             # Use provided tools or get tool specs from connected clients
@@ -88,15 +92,13 @@ class ReasoningAgent(ToolsAgent):
                 response = await self._execute_tools_with_introspection(response, tools)
 
             # For now, return the response directly - introspection will be handled by McpHost
-            if track and response.content:
-                self.chat_history.add_assistant_message(response.content)
+            self.chat_history.add_assistant_message(response.content)  # type: ignore
 
             return response
 
         except Exception as e:
             error_response = ModelResponse(content=f"Error: {e}")
-            if track:
-                self.chat_history.add_assistant_message(error_response.content or "Unknown error occurred")
+            self.chat_history.add_assistant_message(error_response.content or "Unknown error occurred")
             return error_response
 
     # ============= Planning helpers (explicit names) =============

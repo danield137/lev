@@ -2,7 +2,7 @@ from lev.agents.factory import create_agent_from_provider, create_reasoning_agen
 from lev.config import Eval
 from lev.core.chat_history import ChatHistory
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.host.mcp_registry import McpClientRegistry
+from lev.mcp.mcp_registry import McpClientRegistry
 from lev.results import ConversationResult
 
 

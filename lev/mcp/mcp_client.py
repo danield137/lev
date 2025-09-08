@@ -6,7 +6,7 @@ from typing import Any
 
 from mcp import Tool
 
-from lev.host.helpers import log_mcp_call
+from lev.mcp.helpers import log_mcp_call
 
 try:
     from mcp import ClientSession, StdioServerParameters
@@ -202,7 +202,7 @@ class McpClient:
         if final_result is None:
             final_result = {"success": False, "error": "No response from server"}
 
-        if final_result.get('content', "").lower().startswith("error"):
+        if final_result.get("content", "").lower().startswith("error"):
             final_result["success"] = False
             final_result["error"] = final_result.get("content")
 

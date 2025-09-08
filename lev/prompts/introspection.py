@@ -21,7 +21,7 @@ Your message will server as a "developer" message to the agent.
 - Only ask the agent to review the error
 - Always supply a reason for your suggestion.
 - AVOID SPECIFIC. 
-
+- NEVER SUGGEST ASKING THE USER FOR CLARIFICATIONS. ANSWERS MUST BE PROVIDED BY THE AGENT.
 ---
 EXAMPLES:
 ===

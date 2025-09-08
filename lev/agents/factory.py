@@ -1,13 +1,13 @@
-from lev.agents.tool import ToolsAgent
 from lev.agents.reasoning import ReasoningAgent
+from lev.agents.tool import ToolsAgent
 from lev.config import Eval
+from lev.controller import Introspector
 from lev.core.agent import SimpleAgent
 from lev.core.llm_provider import LlmProvider
-from lev.host.mcp_registry import McpClientRegistry
 from lev.loader import get_persona_system_prompt
-from lev.prompts.reasoning import REASONING_AGENT_DEFAULT_SYSTEM_PROMPT
+from lev.mcp.mcp_registry import McpClientRegistry
 from lev.prompts.introspection import INTROSPECTIVE_AGENT_SYSTEM_PROMPT
-from lev.controller import Introspector
+from lev.prompts.reasoning import REASONING_AGENT_DEFAULT_SYSTEM_PROMPT
 
 
 def create_mcp_clients(eval: Eval, mcp_registry: McpClientRegistry):

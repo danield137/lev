@@ -1,7 +1,8 @@
 import json
-from lev.host.mcp_host import McpHost
+
 from lev.common.roles import MessageRole
 from lev.core.agent import Agent
+from lev.mcp.mcp_host import McpHost
 from lev.prompts.reasoning import REASONING_AGENT_ANSWER_VALIDATION_PROMPT
 
 
@@ -80,25 +81,22 @@ class Controller:
             if turn.fatal_error:
                 return f"HostError: {turn.fatal_error}"
 
-            if not turn.had_tools: # only follow up if previous introspection did not declare completion
-                if done:
-                    return turn.content or ""
-                v = await self.introspector.validate(self.host.history().render_trace(), turn.content or "")
-                if v.get("valid", True):
-                    return turn.content or ""
-                role, prompt = MessageRole.DEVELOPER, v.get("followup", "Clarify and answer precisely.")
-                continue
+            if turn.tools_failed:
+                # Tool errors occurred - use introspector to plan recovery
+                if self.introspector:
+                    plan = await self.introspector.plan_next(self.host.history().render_trace())
+                    if plan.get("continue", False):
+                        role, prompt = MessageRole.DEVELOPER, plan.get(
+                            "next_prompt", "Please try a different approach due to tool errors."
+                        )
+                        continue
 
-            # Tools were executed by Host. Decide next message.
-            if self.introspector:
-                plan = await self.introspector.plan_next(self.host.history().render_trace())
-                if plan.get("continue", False):
-                    role, prompt = MessageRole.DEVELOPER, plan.get("next_prompt", "Proceed.")
-                    continue
-
-            # Default synthesis instruction when no explicit plan.
-            role, prompt = MessageRole.DEVELOPER, "Synthesize the final answer using the tool results."
-            done = True
+            v = await self.introspector.validate(self.host.history().render_trace(), turn.content or "")
+            if v.get("valid", True):
+                return turn.content or ""
+            # If the response is deemed not good enough, we should nudge the agent to give a better response
+            role, prompt = MessageRole.DEVELOPER, v.get("followup", "Clarify and answer precisely.")
+            continue
 
         # Get the last assistant message content
         history = self.host.history()

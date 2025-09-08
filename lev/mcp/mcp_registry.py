@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from lev.host.mcp_client import McpClient, McpServerConfig
+from lev.mcp.mcp_client import McpClient, McpServerConfig
 
 
 class McpClientRegistry:

@@ -4,8 +4,8 @@ from typing import Any
 from lev.common.roles import MessageRole
 from lev.core.agent import Agent
 from lev.core.llm_provider import LlmProvider, ModelResponse
-from lev.host.mcp_client import McpClient
 from lev.llm_providers.provider_factory import create_tool_enabled_provider
+from lev.mcp.mcp_client import McpClient
 from lev.prompts.tool_agent import TOOL_AGENT_DEFAULT_SYSTEM_PROMPT
 
 
@@ -98,7 +98,8 @@ class ToolsAgent(Agent):
             )
 
             await self._exec_tool_calls(first.tool_calls)
-            return await self._finalize(tools)
+            resp = await self.prompt_with_existing_messages(tools)
+            return resp.content or "No response generated."
         except Exception as e:
             return f"Error: {e}"
 
@@ -110,9 +111,9 @@ class ToolsAgent(Agent):
                 res = {"success": False, "error": str(e)}
             self.chat_history.add_tool_response_message(tc.id, json.dumps(res))
 
-    async def _finalize(self, tools) -> str:
-        final = await self.llm_provider.chat_complete(messages=self._build_messages(), tools=tools)
-        return final.content or "Processed with tools."
+    async def prompt_with_existing_messages(self, tools) -> ModelResponse:
+        resp = await self.llm_provider.chat_complete(messages=self._build_messages(), tools=tools)
+        return resp
 
     def _build_messages(self) -> list[dict[str, Any]]:
         system = self.system_prompt

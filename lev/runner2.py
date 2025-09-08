@@ -1,13 +1,13 @@
 from termcolor import colored
 
-from lev.agents.factory import create_tool_agent_from_provider, create_introspector_from_provider
+from lev.agents.factory import create_introspector_from_provider, create_tool_agent_from_provider
 from lev.config import Eval
+from lev.controller import Controller, Introspector
 from lev.core import agent
 from lev.core.agent import Agent
 from lev.core.provider_registry import LlmProviderRegistry
-from lev.host.mcp_host import McpHost
-from lev.host.mcp_registry import McpClientRegistry
-from lev.controller import Controller, Introspector
+from lev.mcp.mcp_host import McpHost
+from lev.mcp.mcp_registry import McpClientRegistry
 from lev.prompts.introspection import INTROSPECTIVE_AGENT_SYSTEM_PROMPT
 
 
@@ -67,19 +67,19 @@ async def run_host_evals(
             question = eval_item.question
 
             print(f"\n[{i}/{len(evals)}] Eval: {colored(eval_id, 'cyan')}")
-            print(f"Question: {question}")
-            print("-" * 40)
+            print("-" * 20)
+            print(f"{colored('Question', 'cyan')}: {question}")
 
             try:
                 # Get answer from controller
                 answer = await controller.run(question)
 
-                print(f"Answer: {answer}")
+                print(f"{colored('Answer', 'cyan')}: {answer}")
                 print("-" * 20)
                 print("chat_history")
                 print("=" * 20)
                 print(host.agent.chat_history.render_trace())
-                
+
                 # TODO: Add evaluation logic here
                 # evaluator = Evaluator(..)
                 # score = evaluator.score(answer, eval_item.expected, eval_item.scoring)
