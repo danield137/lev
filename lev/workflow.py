@@ -65,7 +65,7 @@ class Introspector:
             return {"continue": False}
 
 
-class Controller:
+class AgentWorkflow:
     host: McpHost
     introspector: Introspector
 

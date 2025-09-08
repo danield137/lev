@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from lev.common.roles import MessageRole
-from lev.controller import Controller, Introspector
+from lev.workflow import AgentWorkflow, Introspector
 from lev.core.agent import Agent
 from lev.core.llm_provider import ModelResponse
 from lev.mcp.mcp_host import McpHost
@@ -69,13 +69,13 @@ async def test_developer_nudge_after_introspection():
     mcp_registry = MagicMock()
     mcp_registry.get_all_clients.return_value = []
 
-    # Create host and controller
+    # Create host and workflow
     host = McpHost(agent=agent, mcp_registry=mcp_registry)
     introspector_wrapper = Introspector(introspector)
-    controller = Controller(host, introspector_wrapper, max_steps=5)
+    workflow = AgentWorkflow(host, introspector_wrapper, max_steps=5)
 
     # Execute
-    result = await controller.run("Test question")
+    result = await workflow.run("Test question")
 
     # Verify
     assert result == "Final answer with nudge"
@@ -123,13 +123,13 @@ async def test_tool_error_introspection():
     mcp_registry = MagicMock()
     mcp_registry.get_all_clients.return_value = []
 
-    # Create host and controller
+    # Create host and workflow
     host = McpHost(agent=agent, mcp_registry=mcp_registry)
     introspector_wrapper = Introspector(introspector)
-    controller = Controller(host, introspector_wrapper, max_steps=5)
+    workflow = AgentWorkflow(host, introspector_wrapper, max_steps=5)
 
     # Execute
-    result = await controller.run("Test question")
+    result = await workflow.run("Test question")
 
     # Verify
     assert result == "Final answer after error recovery"
@@ -154,12 +154,12 @@ async def test_no_introspector_fallback():
     mcp_registry = MagicMock()
     mcp_registry.get_all_clients.return_value = []
 
-    # Create host and controller without introspector
+    # Create host and workflow without introspector
     host = McpHost(agent=agent, mcp_registry=mcp_registry)
-    controller = Controller(host, None, max_steps=5)  # No introspector
+    workflow = AgentWorkflow(host, None, max_steps=5)  # No introspector
 
     # Execute
-    result = await controller.run("Test question")
+    result = await workflow.run("Test question")
 
     # Verify
     assert result == "Simple answer"

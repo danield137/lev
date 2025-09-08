@@ -2,7 +2,7 @@ from termcolor import colored
 
 from lev.agents.factory import create_introspector_from_provider, create_tool_agent_from_provider
 from lev.config import Eval
-from lev.controller import Controller, Introspector
+from lev.workflow import AgentWorkflow, Introspector
 from lev.core import agent
 from lev.core.agent import Agent
 from lev.core.provider_registry import LlmProviderRegistry
@@ -56,8 +56,8 @@ async def run_host_evals(
     # Create McpHost with solver agent and MCP registry (no more introspector param)
     host = McpHost(agent=solver_agent, mcp_registry=mcp_registry)
     await host.warm_up()
-    # Create Controller with host and introspector
-    controller = Controller(host, introspector)
+    # Create AgentWorkflow with host and introspector
+    workflow = AgentWorkflow(host, introspector)
 
     results = []
 
@@ -71,8 +71,8 @@ async def run_host_evals(
             print(f"{colored('Question', 'cyan')}: {question}")
 
             try:
-                # Get answer from controller
-                answer = await controller.run(question)
+                # Get answer from workflow
+                answer = await workflow.run(question)
 
                 print(f"{colored('Answer', 'cyan')}: {answer}")
                 print("-" * 20)
