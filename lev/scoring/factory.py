@@ -5,11 +5,19 @@ from lev.judge import Judge
 from lev.scoring import Scorer
 from lev.scoring.contains_string import create_contains_string_scorer
 from lev.scoring.llm_judge import create_llm_judge_scorer
+from lev.scoring.deterministic import (
+    create_tool_call_count_scorer,
+    create_tool_call_input_scorer,
+    create_tool_call_output_scorer,
+)
 
 # Registry of scorer factories
 SCORER_FACTORIES: dict[str, Callable[..., Scorer]] = {
     "llm_judge": create_llm_judge_scorer,
     "contains_string": create_contains_string_scorer,
+    "tool_call_count": create_tool_call_count_scorer,
+    "tool_call_input": create_tool_call_input_scorer,
+    "tool_call_output": create_tool_call_output_scorer,
 }
 
 

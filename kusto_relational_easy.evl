@@ -51,35 +51,52 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": [
-              "StormEvents | count"
-            ]
+      "scoring": [
+        {
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
           }
         },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
+        {
+          "type": "tool_call_input",
+          "weight": 0,
+          "parameters": {
+            "inputs": {
+              "kusto_query": [
                 {
-                  "Count": "int"
+                  "field": "query",
+                  "value": "StormEvents | count"
                 }
-              ],
-              "values": [
-                [
-                  59066
-                ]
               ]
             }
           }
-        }
-      },
-      "scoring": [
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "schema": [
+                    {
+                      "Count": "int"
+                    }
+                  ],
+                  "values": [
+                    [
+                      59066
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
         {
           "type": "llm_judge", 
           "mode": "critique",
@@ -88,7 +105,7 @@
         {
           "type": "llm_judge", 
           "mode": "extract", 
-          "weight": 0.3,
+          "weight": 0.2,
           "parameters": {"expected": 59066}
         }
       ]
@@ -106,45 +123,62 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": [
-              "Trips | extend Year = datetime_part('pickup_datetime', StartTime) | where Year == 2011 | summarize count() by vendor_id"
-            ]
+      "scoring": [
+        {
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
           }
         },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
+        {
+          "type": "tool_call_input",
+          "weight": 0,
+          "parameters": {
+            "inputs": {
+              "kusto_query": [
                 {
-                  "vendor_id": "string",
-                  "count_": "real"
+                  "field": "query",
+                  "value": "Trips | extend Year = datetime_part('pickup_datetime', StartTime) | where Year == 2011 | summarize count() by vendor_id"
                 }
-              ],
-              "values": [
-                [
-                  "CMT",
-                  90133189
-                ],
-                [
-                  "VTS",
-                  86764019
-                ]
               ]
             }
           }
-        }
-      },
-      "scoring": [
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "schema": [
+                    {
+                      "vendor_id": "string",
+                      "count_": "real"
+                    }
+                  ],
+                  "values": [
+                    [
+                      "CMT",
+                      90133189
+                    ],
+                    [
+                      "VTS",
+                      86764019
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
         {
           "type": "llm_judge", 
           "mode": "critique",
-          "weight": 1.0
+          "weight": 0.9
         }
       ]
     },
@@ -161,35 +195,52 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": [
-              "Trips | extend Year=datetime_part('year',pickup_datetime)  | where Year between (2011 .. 2015) | where vendor_id == 'CMT' | summarize count() by Year | summarize avg(count_)"
-            ]
+      "scoring": [
+        {
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
           }
         },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
+        {
+          "type": "tool_call_input",
+          "weight": 0,
+          "parameters": {
+            "inputs": {
+              "kusto_query": [
                 {
-                  "avg_count_": "real"
+                  "field": "query",
+                  "value": "Trips | extend Year=datetime_part('year',pickup_datetime)  | where Year between (2011 .. 2015) | where vendor_id == 'CMT' | summarize count() by Year | summarize avg(count_)"
                 }
-              ],
-              "values": [
-                [
-                  87036478.25
-                ]
               ]
             }
           }
-        }
-      },
-      "scoring": [
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "schema": [
+                    {
+                      "avg_count_": "real"
+                    }
+                  ],
+                  "values": [
+                    [
+                      87036478.25
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
         {
           "type": "llm_judge", 
           "mode": "critique",
@@ -198,7 +249,7 @@
         {
           "type": "llm_judge", 
           "mode": "extract", 
-          "weight": 0.3,
+          "weight": 0.2,
           "parameters": {"expected": 87036478.25}
         }
       ]
@@ -216,37 +267,54 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": [
-              "StormEvents | where DamageProperty > 1 | extend Year=datetime_part( 'year', StartTime) | where Year == 2007 | summarize sum(DeathsDirect) + sum(InjuriesDirect) by State | top 1 by Column1 desc"
-            ]
+      "scoring": [
+        {
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
           }
         },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
+        {
+          "type": "tool_call_input",
+          "weight": 0,
+          "parameters": {
+            "inputs": {
+              "kusto_query": [
                 {
-                  "State": "string",
-                  "Column1": "real"
+                  "field": "query",
+                  "value": "StormEvents | where DamageProperty > 1 | extend Year=datetime_part( 'year', StartTime) | where Year == 2007 | summarize sum(DeathsDirect) + sum(InjuriesDirect) by State | top 1 by Column1 desc"
                 }
-              ],
-              "values": [
-                [
-                  "TEXAS",
-                  269
-                ]
               ]
             }
           }
-        }
-      },
-      "scoring": [
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "schema": [
+                    {
+                      "State": "string",
+                      "Column1": "real"
+                    }
+                  ],
+                  "values": [
+                    [
+                      "TEXAS",
+                      269
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
         {
           "type": "llm_judge", 
           "mode": "critique",
@@ -255,7 +323,7 @@
         {
           "type": "llm_judge", 
           "mode": "extract", 
-          "weight": 0.3,
+          "weight": 0.2,
           "parameters": {"expected": 521}
         }
       ]
@@ -273,37 +341,54 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": [
-              "StormEvents | summarize sum(DeathsDirect) + sum(InjuriesDirect) by State, EventId | top 1 by Column1 desc"
-            ]
+      "scoring": [
+        {
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
           }
         },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
+        {
+          "type": "tool_call_input",
+          "weight": 0,
+          "parameters": {
+            "inputs": {
+              "kusto_query": [
                 {
-                  "State": "string",
-                  "Column1": "real"
+                  "field": "query",
+                  "value": "StormEvents | summarize sum(DeathsDirect) + sum(InjuriesDirect) by State, EventId | top 1 by Column1 desc"
                 }
-              ],
-              "values": [
-                [
-                  "MISSOURI",
-                  521
-                ]
               ]
             }
           }
-        }
-      },
-      "scoring": [
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "schema": [
+                    {
+                      "State": "string",
+                      "Column1": "real"
+                    }
+                  ],
+                  "values": [
+                    [
+                      "MISSOURI",
+                      521
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
         {
           "type": "llm_judge", 
           "mode": "critique",
@@ -312,7 +397,7 @@
         {
           "type": "llm_judge", 
           "mode": "extract", 
-          "weight": 0.3,
+          "weight": 0.2,
           "parameters": {"expected": 521}
         }
       ]
@@ -330,37 +415,54 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": [
-              "StormEvents | where State =~ 'california' | summarize count() by EventType | top 1 by EventType desc"
-            ]
+      "scoring": [
+        {
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
           }
         },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
+        {
+          "type": "tool_call_input",
+          "weight": 0,
+          "parameters": {
+            "inputs": {
+              "kusto_query": [
                 {
-                  "State": "string",
-                  "Column1": "real"
+                  "field": "query",
+                  "value": "StormEvents | where State =~ 'california' | summarize count() by EventType | top 1 by EventType desc"
                 }
-              ],
-              "values": [
-                [
-                  "Heavy Snow",
-                  186
-                ]
               ]
             }
           }
-        }
-      },
-      "scoring": [
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "schema": [
+                    {
+                      "State": "string",
+                      "Column1": "real"
+                    }
+                  ],
+                  "values": [
+                    [
+                      "Heavy Snow",
+                      186
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
         {
           "type": "llm_judge", 
           "mode": "critique",
@@ -369,7 +471,7 @@
         {
           "type": "llm_judge", 
           "mode": "extract", 
-          "weight": 0.3,
+          "weight": 0.2,
           "parameters": {"expected": 186}
         }
       ]
