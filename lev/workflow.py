@@ -72,7 +72,7 @@ class AgentWorkflow:
     def __init__(self, host: McpHost, introspector: Introspector, *, max_steps: int = 8):
         self.host, self.introspector, self.max_steps = host, introspector, max_steps
 
-    async def run(self, question: str) -> str:
+    async def ask(self, question: str) -> str:
         done = False
         await self.host.reset()
         role, prompt = MessageRole.USER, question

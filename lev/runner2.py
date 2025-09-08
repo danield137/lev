@@ -57,7 +57,7 @@ async def run_host_evals(
     host = McpHost(agent=solver_agent, mcp_registry=mcp_registry)
     await host.warm_up()
     # Create AgentWorkflow with host and introspector
-    workflow = AgentWorkflow(host, introspector)
+    aw = AgentWorkflow(host, introspector)
 
     results = []
 
@@ -72,7 +72,7 @@ async def run_host_evals(
 
             try:
                 # Get answer from workflow
-                answer = await workflow.run(question)
+                answer = await aw.ask(question)
 
                 print(f"{colored('Answer', 'cyan')}: {answer}")
                 print("-" * 20)
