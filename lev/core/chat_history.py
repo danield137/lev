@@ -95,11 +95,27 @@ class ChatHistory:
 
     def get_user_messages(self) -> list[ParticipantMessage]:
         """Get all user messages from the conversation."""
-        return [ParticipantMessage(**msg) for msg in self.messages if msg.get("role") == "user"]
+        return [
+            ParticipantMessage(
+                role=msg["role"],
+                content=msg["content"],
+                timestamp=msg["timestamp"],
+            )
+            for msg in self.messages
+            if msg.get("role") == "user"
+        ]
 
     def get_assistant_messages(self) -> list[ParticipantMessage]:
         """Get all assistant messages from the conversation."""
-        return [ParticipantMessage(**msg) for msg in self.messages if msg.get("role") == "assistant"]
+        return [
+            ParticipantMessage(
+                role=msg["role"],
+                content=msg["content"],
+                timestamp=msg["timestamp"],
+            )
+            for msg in self.messages
+            if msg.get("role") == "assistant"
+        ]
 
     def to_role_content_messages(self, with_system: bool = False, with_tools: bool = False) -> list[dict[str, Any]]:
         messages = []

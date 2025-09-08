@@ -81,7 +81,19 @@
           }
         }
       },
-      "scoring": [{"type": "llm_judge", "mode": "critique"}, {"type": "llm_judge", "mode": "extract", "expected": "Person::32985348834375"}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": "Person::32985348834375"}
+        }
+      ]
     },
     {
       "id": "snb_most_known_people_no_hints",
@@ -126,7 +138,19 @@
           }
         }
       },
-      "scoring": [{"type": "llm_judge", "mode": "critique"}, {"type": "llm_judge", "mode": "extract", "expected": "Person::32985348834375"}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": "Person::32985348834375"}
+        }
+      ]
     },
     {
       "id": "snb_degrees_of_separation",
@@ -171,7 +195,19 @@
           }
         }
       },
-      "scoring": [{"type": "llm_judge", "mode": "critique"}, {"type": "llm_judge", "mode": "extract", "expected": 2}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": 2}
+        }
+      ]
     }
   ]
 }

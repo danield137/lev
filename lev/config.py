@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -21,10 +21,11 @@ class EvalExecution:
 
 
 @dataclass(slots=True)
-class Scorer:
+class ScorerConfig:
     type: str
+    weight: float = 1.0
     mode: str | None = None
-    parameters: dict[str, Any] | None = None
+    parameters: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -32,7 +33,7 @@ class Eval:
     id: str
     question: str
     execution: EvalExecution
-    scoring: list[Scorer]
+    scoring: list[ScorerConfig]
     expectations: dict[str, Any] | None = None
 
 

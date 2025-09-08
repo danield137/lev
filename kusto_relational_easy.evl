@@ -79,7 +79,19 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 59066}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": 59066}
+        }
+      ]
     },
     {
       "id": "trips_per_vendor",
@@ -128,7 +140,13 @@
           }
         }
       },
-      "scoring": ["critique"]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 1.0
+        }
+      ]
     },
     {
       "id": "trips_avg_cmt",
@@ -171,7 +189,19 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 87036478.25}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": 87036478.25}
+        }
+      ]
     },
     {
       "id": "storm_most_damaging_event_2007",
@@ -216,7 +246,19 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 521}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": 521}
+        }
+      ]
     },
     {
       "id": "storm_most_damaging_event_2007_vague",
@@ -261,7 +303,19 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 521}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": 521}
+        }
+      ]
     },
     {
       "id": "storms_cali",
@@ -306,7 +360,19 @@
           }
         }
       },
-      "scoring": ["critique", {"type": "llm_judge", "mode": "extract", "expected": 186}]
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": 186}
+        }
+      ]
     }
   ]
 }
