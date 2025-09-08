@@ -25,7 +25,7 @@
       "command": "uvx",
       "args": [
         "--no-cache",
-        "/Users/danieldror/Source/repos/fabric-rti-mcp/"
+        "microsoft-fabric-rti-mcp"
       ],
       "env": {
         "KUSTO_DEFAULT_SERVICE_URI": "https://help.kusto.windows.net",
