@@ -19,7 +19,10 @@ def create_llm_critique_scorer_wrapper(judge: Judge, **kwargs) -> Scorer:
 
 def create_llm_extract_value_scorer_wrapper(judge: Judge, **kwargs) -> Scorer:
     """Wrapper to create LLMExtractValueScorer with judge dependencies."""
-    return create_llm_extract_value_scorer(judge.llm_provider, judge.system_prompt, **kwargs)
+    expected = kwargs.pop("expected", None)
+    if expected is None:
+        raise ValueError("Missing required 'expected' parameter for LLMExtractValueScorer.")
+    return create_llm_extract_value_scorer(judge.llm_provider, judge.system_prompt, expected, **kwargs)
 
 # Registry of scorer factories
 SCORER_FACTORIES: dict[str, Callable[..., Scorer]] = {
