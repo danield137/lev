@@ -34,40 +34,6 @@ class Scorer(ABC):
         pass
 
 
-class LLMJudgeScorer(Scorer):
-    """Scorer that uses the existing Judge with LLM evaluation."""
-
-    def __init__(self, judge: Judge, mode: EvaluationMode = EvaluationMode.CRITIQUE):
-        self.judge = judge
-        self.mode = mode
-
-    async def score(self, ctx: ScoringContext) -> Score:
-        """Score using LLM judge."""
-        try:
-            result = await self.judge.score(
-                expected=ctx.expected, conversation=ctx.chat_history, tool_calls=ctx.tool_calls, mode=self.mode
-            )
-
-            # Extract score and reasoning based on mode
-            if self.mode == EvaluationMode.EXTRACT:
-                score_value = result.get("score", 0.0)
-                extracted = result.get("extracted")
-                expected = result.get("expected")
-                match = result.get("match", False)
-                error = result.get("error")
-
-                if error:
-                    reason = f"Extraction failed: {error}"
-                else:
-                    reason = f"Extracted: '{extracted}', expected: '{expected}', match: {match}"
-            else:
-                score_value = result.get("score", 0.0)
-                reason = result.get("justification", result.get("reasoning", "No reasoning provided"))
-
-            return Score(score_value, reason)
-
-        except Exception as e:
-            return Score(0.0, f"LLM Judge evaluation failed: {str(e)}")
 
 
 class ContainsStringScorer(Scorer):
@@ -108,11 +74,17 @@ class ScoreFunction:
         if not self.weighted_scorers:
             return Score(0.0, "No scorers configured")
 
+        # Filter out scorers with 0 weights to avoid calling them
+        active_scorers = [(w, s) for w, s in self.weighted_scorers if w > 0]
+        
+        if not active_scorers:
+            return Score(0.0, "No active scorers (all weights are 0)")
+
         subtotal = 0.0
-        total_weight = sum(w for w, _ in self.weighted_scorers)
+        total_weight = sum(w for w, _ in active_scorers)
         reasons = []
 
-        for weight, scorer in self.weighted_scorers:
+        for weight, scorer in active_scorers:
             score_result = await scorer.score(ctx)
             weighted_value = weight * score_result.value
             subtotal += weighted_value
@@ -126,17 +98,6 @@ class ScoreFunction:
         return Score(overall_score, combined_reason)
 
 
-def create_llm_judge_scorer(judge: Judge, mode: str = "critique") -> LLMJudgeScorer:
-    """Factory method to create an LLM judge scorer."""
-    eval_mode = EvaluationMode.CRITIQUE
-    if mode == "extract":
-        eval_mode = EvaluationMode.EXTRACT
-    elif mode == "match":
-        eval_mode = EvaluationMode.MATCH
-    elif mode == "critique":
-        eval_mode = EvaluationMode.CRITIQUE
-
-    return LLMJudgeScorer(judge, eval_mode)
 
 
 def create_contains_string_scorer(target_string: str, case_sensitive: bool = False) -> ContainsStringScorer:
@@ -144,53 +105,6 @@ def create_contains_string_scorer(target_string: str, case_sensitive: bool = Fal
     return ContainsStringScorer(target_string, case_sensitive)
 
 
-def build_scorers(scoring_config: list[dict[str, Any]], judge: Judge) -> list[tuple[float, Scorer]]:
-    """
-    Build a list of weighted scorers from configuration.
-
-    Args:
-        scoring_config: List of scorer configuration dictionaries
-        judge: Judge instance for LLM-based scoring
-
-    Returns:
-        List of (weight, scorer) tuples
-    """
-    weighted_scorers = []
-
-    for config in scoring_config:
-        if isinstance(config, str):
-            # Simple string config like "critique"
-            weight = 1.0
-            if config == "critique":
-                scorer = create_llm_judge_scorer(judge, "critique")
-            elif config == "match":
-                scorer = create_llm_judge_scorer(judge, "match")
-            else:
-                continue  # Skip unknown string configs
-        elif isinstance(config, dict):
-            # Dictionary config
-            scorer_type = config.get("type")
-            weight = config.get("weight", 1.0)
-
-            if scorer_type == "llm_judge":
-                mode_str = config.get("mode", "critique")
-                scorer = create_llm_judge_scorer(judge, mode_str)
-
-            elif scorer_type == "contains_string":
-                target_string = config.get("value")
-                if not target_string:
-                    continue  # Skip if no target string
-
-                case_sensitive = config.get("case_sensitive", False)
-                scorer = create_contains_string_scorer(target_string, case_sensitive)
-            else:
-                continue  # Skip unknown scorer types
-        else:
-            continue  # Skip invalid config
-
-        weighted_scorers.append((weight, scorer))
-
-    return weighted_scorers
 
 
 def validate_mcp_usage(eval_mcps: list[str], used_mcps: list[str]) -> bool:
