@@ -76,6 +76,6 @@ class LLMExtractValueScorer(Scorer):
             return abs(float(a) - float(b)) < 1e-3
         return str(a).lower() == str(b).lower()
 
-def create_llm_extract_value_scorer(llm_provider: LlmProvider, system_prompt: str | None = None, **kwargs) -> LLMExtractValueScorer:
+def create_llm_extract_value_scorer(llm_provider: LlmProvider, system_prompt: str | None = None, expected: Any = None, **kwargs) -> LLMExtractValueScorer:
     """Factory function to create LLMExtractValueScorer."""
-    return LLMExtractValueScorer(llm_provider, system_prompt, **kwargs)
+    return LLMExtractValueScorer(llm_provider, system_prompt, expected, **kwargs)
