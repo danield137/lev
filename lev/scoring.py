@@ -34,40 +34,6 @@ class Scorer(ABC):
         pass
 
 
-class LLMJudgeScorer(Scorer):
-    """Scorer that uses the existing Judge with LLM evaluation."""
-
-    def __init__(self, judge: Judge, mode: EvaluationMode = EvaluationMode.CRITIQUE):
-        self.judge = judge
-        self.mode = mode
-
-    async def score(self, ctx: ScoringContext) -> Score:
-        """Score using LLM judge."""
-        try:
-            result = await self.judge.score(
-                expected=ctx.expected, conversation=ctx.chat_history, tool_calls=ctx.tool_calls, mode=self.mode
-            )
-
-            # Extract score and reasoning based on mode
-            if self.mode == EvaluationMode.EXTRACT:
-                score_value = result.get("score", 0.0)
-                extracted = result.get("extracted")
-                expected = result.get("expected")
-                match = result.get("match", False)
-                error = result.get("error")
-
-                if error:
-                    reason = f"Extraction failed: {error}"
-                else:
-                    reason = f"Extracted: '{extracted}', expected: '{expected}', match: {match}"
-            else:
-                score_value = result.get("score", 0.0)
-                reason = result.get("justification", result.get("reasoning", "No reasoning provided"))
-
-            return Score(score_value, reason)
-
-        except Exception as e:
-            return Score(0.0, f"LLM Judge evaluation failed: {str(e)}")
 
 
 class ContainsStringScorer(Scorer):
@@ -132,17 +98,6 @@ class ScoreFunction:
         return Score(overall_score, combined_reason)
 
 
-def create_llm_judge_scorer(judge: Judge, mode: str = "critique") -> LLMJudgeScorer:
-    """Factory method to create an LLM judge scorer."""
-    eval_mode = EvaluationMode.CRITIQUE
-    if mode == "extract":
-        eval_mode = EvaluationMode.EXTRACT
-    elif mode == "match":
-        eval_mode = EvaluationMode.MATCH
-    elif mode == "critique":
-        eval_mode = EvaluationMode.CRITIQUE
-
-    return LLMJudgeScorer(judge, eval_mode)
 
 
 def create_contains_string_scorer(target_string: str, case_sensitive: bool = False) -> ContainsStringScorer:

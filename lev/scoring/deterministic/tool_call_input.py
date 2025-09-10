@@ -11,7 +11,7 @@ class ToolCallInputScorer(Scorer):
     Parameters
     ----------
     inputs : Mapping[str, list[dict]]
-        tool → list of {field, match, mode}
+        tool → list of {field, value, mode}
           mode ∈ {"exact", "contains", "regex"}
     """
 
@@ -47,7 +47,7 @@ class ToolCallInputScorer(Scorer):
 
             for check in checks:
                 field = check["field"]
-                expected_match = check["match"]
+                expected_value = check["value"]
                 mode = check.get("mode", "exact")
 
                 if field not in arguments:
@@ -56,14 +56,14 @@ class ToolCallInputScorer(Scorer):
                 actual_value = str(arguments[field])
 
                 if mode == "exact":
-                    if actual_value != expected_match:
-                        return Score(0.0, f"{tool}.{field}: expected '{expected_match}', got '{actual_value}'")
+                    if actual_value != expected_value:
+                        return Score(0.0, f"{tool}.{field}: expected '{expected_value}', got '{actual_value}'")
                 elif mode == "contains":
-                    if expected_match not in actual_value:
-                        return Score(0.0, f"{tool}.{field}: '{expected_match}' not found in '{actual_value}'")
+                    if expected_value not in actual_value:
+                        return Score(0.0, f"{tool}.{field}: '{expected_value}' not found in '{actual_value}'")
                 elif mode == "regex":
-                    if not re.search(expected_match, actual_value):
-                        return Score(0.0, f"{tool}.{field}: pattern '{expected_match}' not matched in '{actual_value}'")
+                    if not re.search(expected_value, actual_value):
+                        return Score(0.0, f"{tool}.{field}: pattern '{expected_value}' not matched in '{actual_value}'")
                 else:
                     return Score(0.0, f"invalid mode '{mode}' for {tool}.{field}")
 

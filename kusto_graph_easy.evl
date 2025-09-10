@@ -84,14 +84,12 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.5,
           "parameters": {}
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.2,
           "parameters": {"expected": "Person::32985348834375"}
         }
@@ -143,14 +141,12 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.5,
           "parameters": {}
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.2,
           "parameters": {"expected": "Person::32985348834375"}
         }
@@ -182,14 +178,12 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.5,
           "parameters": {}
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.3,
           "parameters": {"expected": 2}
         }

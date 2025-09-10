@@ -98,13 +98,11 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.7
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.2,
           "parameters": {"expected": 59066}
         }
@@ -176,8 +174,7 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.9
         }
       ]
@@ -242,13 +239,11 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.7
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.2,
           "parameters": {"expected": 87036478.25}
         }
@@ -316,13 +311,11 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.7
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.2,
           "parameters": {"expected": 521}
         }
@@ -390,13 +383,11 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.7
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.2,
           "parameters": {"expected": 521}
         }
@@ -464,13 +455,11 @@
           }
         },
         {
-          "type": "llm_judge", 
-          "mode": "critique",
+          "type": "llm_critique",
           "weight": 0.7
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.2,
           "parameters": {"expected": 186}
         }
