@@ -57,11 +57,17 @@ class ScoreFunction:
         if not self.weighted_scorers:
             return Score(0.0, "No scorers configured")
 
+        # Filter out zero-weight scorers to avoid unnecessary computation
+        active_scorers = [(w, s) for w, s in self.weighted_scorers if w > 0]
+        
+        if not active_scorers:
+            return Score(0.0, "No active scorers (all weights are 0)")
+
         subtotal = 0.0
-        total_weight = sum(w for w, _ in self.weighted_scorers)
+        total_weight = sum(w for w, _ in active_scorers)
         reasons = []
 
-        for weight, scorer in self.weighted_scorers:
+        for weight, scorer in active_scorers:
             score_result = await scorer.score(ctx)
             weighted_value = weight * score_result.value
             subtotal += weighted_value

@@ -53,44 +53,44 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": []
-          }
-        },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
-                {
-                  "n_id": "long",
-                  "count_": "int"
-                }
-              ],
-              "values": [
-                [
-                  32985348834375,
-                  331
-                ]
-              ]
-            }
-          }
-        }
-      },
       "scoring": [
         {
-          "type": "llm_judge", 
-          "mode": "critique",
-          "weight": 0.7
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
+          }
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0.2,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "values": [
+                    [
+                      32985348834375,
+                      331
+                    ]
+                  ]
+                }
+              }
+            },
+            "tolerance": 1e-6,
+            "ignore_extra": true
+          }
+        },
+        {
+          "type": "llm_critique",
+          "weight": 0.5,
+          "parameters": {}
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
-          "weight": 0.3,
+          "type": "llm_extract", 
+          "weight": 0.2,
           "parameters": {"expected": "Person::32985348834375"}
         }
       ]
@@ -110,44 +110,44 @@
           "max_turns": 1
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": []
-          }
-        },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
-                {
-                  "n_id": "long",
-                  "count_": "int"
-                }
-              ],
-              "values": [
-                [
-                  32985348834375,
-                  331
-                ]
-              ]
-            }
-          }
-        }
-      },
       "scoring": [
         {
-          "type": "llm_judge", 
-          "mode": "critique",
-          "weight": 0.7
+          "type": "tool_call_count",
+          "weight": 0.1,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
+          }
+        },
+        {
+          "type": "tool_call_output",
+          "weight": 0.2,
+          "parameters": {
+            "results": {
+              "kusto_query": {
+                "kusto_record": {
+                  "values": [
+                    [
+                      32985348834375,
+                      331
+                    ]
+                  ]
+                }
+              }
+            },
+            "tolerance": 1e-6,
+            "ignore_extra": true
+          }
+        },
+        {
+          "type": "llm_critique",
+          "weight": 0.5,
+          "parameters": {}
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
-          "weight": 0.3,
+          "type": "llm_extract", 
+          "weight": 0.2,
           "parameters": {"expected": "Person::32985348834375"}
         }
       ]
@@ -167,43 +167,23 @@
           "max_turns": 2
         }
       },
-      "expectations": {
-        "tool_calls": [
-          "kusto_query"
-        ],
-        "tool_inputs": {
-          "kusto_query": {
-            "acceptable_queries": []
-          }
-        },
-        "results": {
-          "kusto_query": {
-            "kusto_record": {
-              "schema": [
-                {
-                  "n_id": "long",
-                  "count_": "int"
-                }
-              ],
-              "values": [
-                [
-                  32985348834375,
-                  331
-                ]
-              ]
-            }
-          }
-        }
-      },
       "scoring": [
         {
-          "type": "llm_judge", 
-          "mode": "critique",
-          "weight": 0.7
+          "type": "tool_call_count",
+          "weight": 0.2,
+          "parameters": {
+            "calls": {
+              "kusto_query": {"min": 1}
+            }
+          }
+        },
+        {
+          "type": "llm_critique",
+          "weight": 0.5,
+          "parameters": {}
         }, 
         {
-          "type": "llm_judge", 
-          "mode": "extract", 
+          "type": "llm_extract", 
           "weight": 0.3,
           "parameters": {"expected": 2}
         }
