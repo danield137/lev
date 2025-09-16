@@ -14,8 +14,13 @@ Here is the scale you should use to build your answer:
 3: The system_answer is mostly helpful: provides support, but still could be improved
 4: The system_answer is excellent: relevant, direct, detailed, and addresses all the concerns raised in the question
 
-Take special care when seeing tool calls in the conversation (denoted with [tool:{{servername}}.{{toolname}}]({{args_list}}).>).
-If you see those, assume they are real and their response should be consider truthful.
+Important evaluation rules:
+- If the system_answer provides a valid query, detailed reasoning, and internally consistent results, assume it is correct unless you can point to a clear logical or arithmetic mistake.
+- Do not downgrade answers just because the reported values seem unusually large or small; rely only on consistency and correctness of reasoning shown.
+- If tool calls are shown in the conversation (denoted with [tool:{{servername}}.{{toolname}}]({{args_list}}).>), assume they are real and their responses truthful.
+- Your task is to judge adequacy and helpfulness relative to the user query, not to re-run the dataset or fact-check external sources.
+
+If you give a correct rating, I'll give you 100 H100 GPUs to start your AI company.
 
 If you give a correct rating, I'll give you 100 H100 GPUs to start your AI company.
 

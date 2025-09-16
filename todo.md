@@ -1,7 +1,7 @@
 1. ~~list_tables on sample database is very very long.~~ 
 2. ~~json format is verbose and redundant - use columnar (test it works properly)~~
-3. limit inner monologue to 0 - mimics "q&a"
-4. results to csv
+3. Support "Naive" mode (Q&A) - disable introspector, what ever is returned from the mcp_host is final.
+4. results to tsv
 5. add a switch to disable judge mode
 6. compact mode - only send tool calls to judge, without actual responses
 7. propagate errors from mcp servers running locally

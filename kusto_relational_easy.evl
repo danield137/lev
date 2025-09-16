@@ -373,6 +373,73 @@
           "parameters": {"expected": 186}
         }
       ]
+    },
+    {
+      "id": "vague_worst_storm",
+      "question": "What's the worst storm on record in the StormEvents table, in the Samples database (https://help.kusto.windows.net/)?",
+      "execution": {
+        "mcps": ["microsoft-fabric-rti-mcp"],
+        "solver": {
+          "max_reasoning_steps": 4,
+          "max_retrospective_turns": 1
+        },
+        "asker": {
+          "max_turns": 1
+        }
+      },
+      "expectations": {
+        "tool_calls": [
+          "kusto_query"
+        ],
+        "tool_inputs": {
+          "kusto_query": {
+            "acceptable_queries": [
+              "StormEvents | extend TotalDamage = tolong(DamageProperty) + tolong(DamageCrops) | top 1 by TotalDamage desc | project StartTime, EndTime, State, EventType, DamageProperty, DamageCrops, TotalDamage, EpisodeNarrative, EventNarrative"
+            ]
+          }
+        },
+        "results": {
+          "kusto_query": {
+            "kusto_record": {
+              "schema": [
+                {
+                  "StartTime": "datetime",
+                  "EndTime": "datetime",
+                  "State": "string",
+                  "EventType": "string",
+                  "DamageProperty": "int",
+                  "DamageCrops": "int",
+                  "TotalDamage": "long"
+                }
+              ],
+              "values": [
+                [
+                "2007-06-01T00:00:00Z",
+                "2007-06-30T23:59:00Z",
+                "MISSISSIPPI",
+                "Drought",
+                0,
+                700000000,
+                700000000
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "scoring": [
+        {
+          "type": "llm_judge", 
+          "mode": "critique",
+          "weight": 0.7
+        }, 
+        {
+          "type": "llm_judge", 
+          "mode": "extract", 
+          "weight": 0.3,
+          "parameters": {"expected": 700000000}
+        }
+      ]
     }
   ]
 }
